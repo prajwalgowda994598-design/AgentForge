@@ -50,7 +50,7 @@ docker compose version
 sudo mkdir -p /opt/agentforge
 sudo chown $USER:$USER /opt/agentforge
 cd /opt/agentforge
-git clone https://github.com/YOUR_ORG/agentforge.git .
+git clone https://github.com/prajwalgowda994598-design/AgentForge.git .
 
 # Configure environment
 cp .env.example .env

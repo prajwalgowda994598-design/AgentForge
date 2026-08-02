@@ -1,7 +1,7 @@
 # AgentForge 🤖
 ## Autonomous Multi-Agent AI Research System
 
-[![CI/CD](https://github.com/YOUR_GITHUB_USERNAME/agentforge/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/YOUR_GITHUB_USERNAME/agentforge/actions)
+[![CI/CD](https://github.com/prajwalgowda994598-design/AgentForge/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/prajwalgowda994598-design/AgentForge/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Tests](https://img.shields.io/badge/tests-45%20passing-brightgreen.svg)](#testing)
