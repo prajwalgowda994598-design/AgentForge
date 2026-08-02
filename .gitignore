@@ -1,0 +1,85 @@
+# AgentForge - .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Environment secrets - NEVER commit .env
+.env
+!.env.example
+
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# FAISS index
+vectorstore/faiss_index/
+*.faiss
+*.pkl
+
+# Pytest / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+
+# Mypy
+.mypy_cache/
+
+# Ruff
+.ruff_cache/
+
+# Node.js / Frontend
+node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Docker override (may contain local secrets)
+docker-compose.override.yml
+
+# Logs
+*.log
+logs/
+
+# Distribution
+build/
+dist/
+*.egg-info/
+*.egg
+
+# Local dev/debug scripts
+boot_test.py
+check_imports.py
+check_versions.py
+diagnose.py
+pathtest.py
+_probe.py
+write_env.py
+start_and_test.py
+/test_api.py
+list_free_models.py
+load_sample_data.py
+_write_gitignore.py
+$null
+
+# Misc
+*.bak
+*.tmp
+*.orig
