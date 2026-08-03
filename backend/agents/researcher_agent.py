@@ -52,8 +52,11 @@ class ResearcherAgent(BaseAgent):
 
         if iteration == 0 or avg_score < 0.5:
             try:
+                import asyncio, concurrent.futures
                 from langchain_community.tools import DuckDuckGoSearchRun
-                web_result = DuckDuckGoSearchRun().run(query)
+                _search_fn = DuckDuckGoSearchRun().run
+                loop = asyncio.get_event_loop()
+                web_result = await loop.run_in_executor(None, _search_fn, query)
                 if web_result:
                     web_snippets = [s.strip() for s in web_result.split("\n\n") if s.strip()][:5]
                     self.logger.info("web_search_complete", snippets=len(web_snippets))

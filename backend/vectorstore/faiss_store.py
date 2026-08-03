@@ -22,12 +22,17 @@ import pickle
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+import asyncio
+import concurrent.futures
 import faiss
 import numpy as np
 
 from agentforge.backend.core.config import settings
 from agentforge.backend.core.exceptions import VectorStoreError
 from agentforge.backend.core.logging import get_logger
+
+# Thread pool for CPU-bound embedding work so it never blocks the event loop
+_THREAD_POOL = concurrent.futures.ThreadPoolExecutor(max_workers=2, thread_name_prefix="faiss")
 
 logger = get_logger(__name__)
 
@@ -130,10 +135,12 @@ class FAISSVectorStore:
         """
         Initialise the embedding model and load / create the FAISS index.
         Called once at startup by get_vector_store().
+        Model loading is run in a thread so it never blocks the event loop.
         """
-        # Build embeddings lazily here so errors surface at startup, not import time
+        # Build embeddings lazily — run in thread so startup doesn't block the loop
         if self._embeddings is None:
-            self._embeddings = _build_embeddings()
+            loop = asyncio.get_event_loop()
+            self._embeddings = await loop.run_in_executor(_THREAD_POOL, _build_embeddings)
 
         idx_file  = _index_file()
         meta_file = _metadata_file()
@@ -186,7 +193,14 @@ class FAISSVectorStore:
             raise VectorStoreError("texts and metadata_list must have the same length")
 
         try:
-            vectors = await self._embeddings.aembed_documents(texts)
+            # Run in thread pool — sentence-transformers is CPU-bound and would
+            # block the event loop if called directly from an async context.
+            loop = asyncio.get_event_loop()
+            texts_copy = list(texts)   # avoid closure-over-mutable-default
+            vectors = await loop.run_in_executor(
+                _THREAD_POOL,
+                lambda: self._embeddings.embed_documents(texts_copy),
+            )
         except Exception as exc:
             raise VectorStoreError(f"Embedding failed: {exc}") from exc
 
@@ -219,7 +233,12 @@ class FAISSVectorStore:
             return []
 
         try:
-            query_vector = await self._embeddings.aembed_query(query)
+            # Run embedding in thread pool — CPU-bound, must not block the event loop
+            loop = asyncio.get_event_loop()
+            query_vector = await loop.run_in_executor(
+                _THREAD_POOL,
+                lambda: self._embeddings.embed_query(query),
+            )
         except Exception as exc:
             raise VectorStoreError(f"Query embedding failed: {exc}") from exc
 

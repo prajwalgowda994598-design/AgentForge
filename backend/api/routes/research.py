@@ -9,6 +9,8 @@ GET  /research/{id}/runs – Get all agent run records for a session
 GET  /sessions          – List recent sessions for the current user
 """
 
+import asyncio
+import concurrent.futures
 import time
 import traceback
 import uuid
@@ -35,6 +37,22 @@ from agentforge.backend.services.websocket_manager import ws_manager
 
 router = APIRouter(prefix="/research", tags=["research"])
 logger = get_logger(__name__)
+
+
+# ── Thread pool for heavy pipeline work ───────────────────────────────────────
+# The research pipeline (LLM calls + embeddings + web search) is CPU and I/O
+# bound in ways that block the asyncio event loop even with run_in_executor,
+# because LangChain's internals use synchronous httpx internally.
+# Running the whole pipeline in its own OS thread with its own event loop
+# keeps the Uvicorn event loop free for polling and other requests.
+_PIPELINE_EXECUTOR = concurrent.futures.ThreadPoolExecutor(
+    max_workers=4, thread_name_prefix="pipeline"
+)
+
+
+def _run_pipeline_in_thread(session_id: str, query: str, top_k: int, user_id):
+    """Entry point for the pipeline thread — runs its own asyncio event loop."""
+    asyncio.run(_run_workflow_background(session_id, query, top_k, user_id))
 
 
 # ── Background Task ────────────────────────────────────────────────────────────
@@ -216,13 +234,17 @@ async def submit_research(
     )
     await db.commit()
 
-    # Kick off background workflow
-    background_tasks.add_task(
-        _run_workflow_background,
-        session_id=session_id,
-        query=body.query,
-        top_k=body.top_k,
-        user_id=user["user_id"] if user else None,
+    # Submit pipeline to a dedicated thread pool so it runs in its own
+    # event loop and never blocks Uvicorn's event loop.
+    # BackgroundTasks is only used to register the fire-and-forget call.
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(
+        _PIPELINE_EXECUTOR,
+        _run_pipeline_in_thread,
+        session_id,
+        body.query,
+        body.top_k,
+        user["user_id"] if user else None,
     )
 
     return {

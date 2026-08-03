@@ -23,14 +23,22 @@ class TestFAISSVectorStore:
 
     @pytest.fixture
     def mock_embeddings(self):
-        """Mock OpenAI embeddings returning random 1536-dim vectors."""
+        """Mock embeddings returning deterministic 1536-dim vectors.
+
+        We use synchronous MagicMock because faiss_store now calls
+        embed_documents / embed_query via run_in_executor (sync path).
+        """
         mock = MagicMock()
+        # Synchronous methods called inside the thread executor
+        mock.embed_documents = MagicMock(
+            side_effect=lambda texts: [[float(i) * 0.001 + j * 0.0001 for i in range(1536)] for j, _ in enumerate(texts)]
+        )
+        mock.embed_query = MagicMock(return_value=[0.5] * 1536)
+        # Keep async mocks too in case any code path still uses them
         mock.aembed_documents = AsyncMock(
             side_effect=lambda texts: [[float(i) * 0.001 + j * 0.0001 for i in range(1536)] for j, _ in enumerate(texts)]
         )
-        mock.aembed_query = AsyncMock(
-            return_value=[0.5] * 1536
-        )
+        mock.aembed_query = AsyncMock(return_value=[0.5] * 1536)
         return mock
 
     @pytest.mark.asyncio
