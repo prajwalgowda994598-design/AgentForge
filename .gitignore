@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.env
+.venv/
+venv/
+.env.local
+*.egg-info/
+*.egg
+build/
+dist/
+.eggs/
+
+# VSCode
+.vscode/
+
+# Pytest
+.pytest_cache/
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+
+# Logs
+*.log
+
+# IDEs
+.idea/
+
+# Byte-compiled
+*.pyc
+
+# Local settings
+local_settings.py
+
+# FAISS index
+vectorstore/faiss_index/index.faiss

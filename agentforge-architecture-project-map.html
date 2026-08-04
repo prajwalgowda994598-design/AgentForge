@@ -1,0 +1,333 @@
+
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>AgentForge – Architecture</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:-apple-system,"Segoe UI",system-ui,sans-serif;font-size:14px;line-height:1.6;background:#f7f8fa;color:#1f2328}
+  .page{max-width:760px;margin:0 auto;padding:32px 20px 48px}
+  h1{font-size:22px;font-weight:700;color:#1f2328;margin-bottom:4px}
+  h2{font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#57606a;margin:28px 0 10px;padding-bottom:6px;border-bottom:1px solid #e5e7eb}
+  h3{font-size:14px;font-weight:600;margin-bottom:6px;color:#1f2328}
+  .subtitle{color:#57606a;font-size:13px;margin-bottom:24px}
+  .badge{display:inline-block;background:#dbeafe;color:#1e40af;font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;margin-right:4px}
+  .badge.green{background:#dcfce7;color:#166534}
+  .badge.purple{background:#ede9fe;color:#5b21b6}
+  .badge.orange{background:#ffedd5;color:#9a3412}
+
+  /* Architecture flow */
+  .arch{background:#fff;border:1px solid #e5e7eb;border-radius:10px;padding:20px;margin-bottom:8px;overflow-x:auto}
+  .flow{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .node{background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;padding:5px 10px;font-size:12px;font-weight:600;color:#334155;white-space:nowrap}
+  .node.blue{background:#dbeafe;border-color:#93c5fd;color:#1e3a8a}
+  .node.green{background:#dcfce7;border-color:#86efac;color:#14532d}
+  .node.purple{background:#ede9fe;border-color:#c4b5fd;color:#4c1d95}
+  .node.orange{background:#ffedd5;border-color:#fdba74;color:#7c2d12}
+  .node.red{background:#fee2e2;border-color:#fca5a5;color:#7f1d1d}
+  .arrow{color:#94a3b8;font-size:16px;font-weight:300}
+
+  /* Agent pipeline */
+  .agent-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  @media(max-width:500px){.agent-grid{grid-template-columns:1fr}}
+  .agent-card{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:12px 14px}
+  .agent-icon{font-size:20px;margin-bottom:4px}
+  .agent-name{font-weight:700;font-size:13px;color:#1f2328}
+  .agent-role{font-size:12px;color:#57606a;margin-top:2px}
+  .agent-in,.agent-out{font-size:11px;margin-top:6px;padding:3px 7px;border-radius:4px}
+  .agent-in{background:#f0f9ff;color:#0369a1}
+  .agent-out{background:#f0fdf4;color:#15803d}
+  .label{font-weight:600;margin-right:3px}
+
+  /* Langgraph flow */
+  .lg-flow{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 0}
+  .lg-node{background:#3b82f6;color:#fff;padding:6px 22px;border-radius:6px;font-size:12px;font-weight:600;text-align:center;min-width:130px}
+  .lg-node.start{background:#1f2328}
+  .lg-node.end{background:#1f2328}
+  .lg-node.special{background:#7c3aed}
+  .lg-edge{color:#6b7280;font-size:11px;text-align:center}
+  .lg-branch{display:flex;align-items:flex-start;gap:16px;width:100%}
+  .lg-branch-label{font-size:10px;color:#ef4444;font-weight:700}
+  .lg-branch-pass{font-size:10px;color:#16a34a;font-weight:700}
+  .lg-connector{display:flex;flex-direction:column;align-items:center;gap:4px}
+  .lg-retry{border:1px dashed #ef4444;border-radius:6px;padding:4px 10px;font-size:10px;color:#ef4444;font-weight:600}
+
+  /* File tree */
+  .file-tree{background:#fff;border:1px solid #e5e7eb;border-radius:8px;padding:14px 16px;font-family:monospace;font-size:12px;line-height:1.8;overflow-x:auto}
+  .dir{color:#1d4ed8;font-weight:700}
+  .file{color:#374151}
+  .file.py{color:#15803d}
+  .file.ts,.file.tsx{color:#1d4ed8}
+  .file.yml,.file.yaml{color:#b45309}
+  .file.md{color:#7c3aed}
+  .file.docker{color:#0891b2}
+  .file.cfg{color:#6b7280}
+
+  /* Tech stack table */
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;padding:6px 10px;background:#f1f5f9;color:#374151;font-weight:700;border-bottom:2px solid #e5e7eb}
+  td{padding:6px 10px;border-bottom:1px solid #f1f5f9;vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td:first-child{font-weight:600;color:#1e3a8a;white-space:nowrap}
+
+  /* Deliverables */
+  .checklist{list-style:none;padding:0}
+  .checklist li{padding:5px 0;font-size:13px;border-bottom:1px solid #f1f5f9;display:flex;align-items:center;gap:8px}
+  .checklist li:last-child{border-bottom:none}
+  .check{color:#16a34a;font-weight:700;font-size:15px}
+
+  footer{margin-top:48px;padding-top:16px;border-top:1px solid #e5e7eb;text-align:center;font-size:11px;color:#8b949e}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <h1>🤖 AgentForge</h1>
+  <p class="subtitle">Autonomous Multi-Agent AI Research System — Architecture &amp; Project Map</p>
+  <div>
+    <span class="badge">Python 3.12</span>
+    <span class="badge">FastAPI</span>
+    <span class="badge">LangGraph</span>
+    <span class="badge green">GPT-4o</span>
+    <span class="badge purple">React 18</span>
+    <span class="badge orange">Docker</span>
+  </div>
+
+  
+  <h2>System Architecture</h2>
+  <div class="arch">
+    <div class="flow">
+      <div class="node blue">👤 User</div>
+      <div class="arrow">→</div>
+      <div class="node purple">⚛ React Frontend</div>
+      <div class="arrow">→</div>
+      <div class="node blue">⚡ FastAPI Backend</div>
+      <div class="arrow">→</div>
+      <div class="node green">🔀 LangGraph</div>
+    </div>
+    <div class="flow">
+      <div class="node orange">🔍 FAISS Index</div>
+      <div class="arrow">←→</div>
+      <div class="node green">5 AI Agents</div>
+      <div class="arrow">←→</div>
+      <div class="node red">🌐 Neo4j Graph</div>
+    </div>
+    <div class="flow" style="margin-bottom:0">
+      <div class="node">🐘 PostgreSQL</div>
+      <div class="arrow">←→</div>
+      <div class="node">🔴 Redis Cache</div>
+      <div class="arrow">←→</div>
+      <div class="node purple">📡 WebSockets</div>
+    </div>
+  </div>
+
+  
+  <h2>LangGraph Workflow (Conditional Retry Loop)</h2>
+  <div class="arch">
+    <div class="lg-flow">
+      <div class="lg-node start">▶ START</div>
+      <div class="lg-edge">↓</div>
+      <div class="lg-node">🔍 Researcher</div>
+      <div class="lg-edge">↓</div>
+      <div class="lg-node">📝 Summarizer</div>
+      <div class="lg-edge">↓</div>
+      <div class="lg-node special">⚖️ Critic (scores 0–1)</div>
+      <div style="display:flex;gap:48px;align-items:flex-start;margin:4px 0">
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="lg-branch-pass">✓ score ≥ 0.7</div>
+          <div class="lg-edge">↓</div>
+          <div class="lg-node">✅ Fact Checker</div>
+          <div class="lg-edge">↓</div>
+          <div class="lg-node">🧩 Synthesizer</div>
+          <div class="lg-edge">↓</div>
+          <div class="lg-node end">■ END</div>
+        </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:4px">
+          <div class="lg-branch-label">✗ score &lt; 0.7</div>
+          <div class="lg-edge">↓</div>
+          <div class="lg-retry">↩ Retry Researcher</div>
+          <div class="lg-edge" style="font-size:10px">max 3 iterations</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  
+  <h2>The Five Agents</h2>
+  <div class="agent-grid">
+    <div class="agent-card">
+      <div class="agent-icon">🔍</div>
+      <div class="agent-name">Researcher</div>
+      <div class="agent-role">Searches FAISS + DuckDuckGo web; refines with LLM</div>
+      <div class="agent-in"><span class="label">IN:</span> query, top_k</div>
+      <div class="agent-out"><span class="label">OUT:</span> retrieved_chunks, refined_research</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">📝</div>
+      <div class="agent-name">Summarizer</div>
+      <div class="agent-role">Condenses research into structured Markdown notes</div>
+      <div class="agent-in"><span class="label">IN:</span> refined_research</div>
+      <div class="agent-out"><span class="label">OUT:</span> summary</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">⚖️</div>
+      <div class="agent-name">Critic</div>
+      <div class="agent-role">Scores quality 0–1. Routes retry or proceed.</div>
+      <div class="agent-in"><span class="label">IN:</span> query, summary</div>
+      <div class="agent-out"><span class="label">OUT:</span> critic_score, should_retry</div>
+    </div>
+    <div class="agent-card">
+      <div class="agent-icon">✅</div>
+      <div class="agent-name">Fact Checker</div>
+      <div class="agent-role">Verifies claims against sources; annotates citations</div>
+      <div class="agent-in"><span class="label">IN:</span> summary, chunks, snippets</div>
+      <div class="agent-out"><span class="label">OUT:</span> verified_summary</div>
+    </div>
+    <div class="agent-card" style="grid-column:1/-1">
+      <div class="agent-icon">🧩</div>
+      <div class="agent-name">Synthesizer</div>
+      <div class="agent-role">Combines all validated info into polished Markdown answer with sources</div>
+      <div class="agent-in"><span class="label">IN:</span> verified_summary, critic_score, sources</div>
+      <div class="agent-out"><span class="label">OUT:</span> final_answer (Markdown)</div>
+    </div>
+  </div>
+
+  
+  <h2>Technology Stack</h2>
+  <div class="arch" style="padding:0;overflow:hidden">
+    <table>
+      <tr><th>Layer</th><th>Technology</th></tr>
+      <tr><td>Backend API</td><td>Python 3.12, FastAPI, Uvicorn, Gunicorn</td></tr>
+      <tr><td>Agent Orchestration</td><td>LangGraph (StateGraph), LangChain, AutoGen</td></tr>
+      <tr><td>LLM</td><td>OpenAI GPT-4o (chat), text-embedding-3-small (embed)</td></tr>
+      <tr><td>Vector Store</td><td>FAISS (IndexIDMap + IndexFlatL2, L2 distance)</td></tr>
+      <tr><td>Knowledge Graph</td><td>Neo4j 5 Community (Bolt), APOC plugin</td></tr>
+      <tr><td>Relational DB</td><td>PostgreSQL 16 + SQLAlchemy 2 async + asyncpg</td></tr>
+      <tr><td>Cache / Sessions</td><td>Redis 7 (aioredis), LRU eviction</td></tr>
+      <tr><td>Real-time</td><td>WebSockets (FastAPI native), ping/pong keep-alive</td></tr>
+      <tr><td>Auth</td><td>JWT (python-jose), Bearer token, bcrypt passwords</td></tr>
+      <tr><td>Logging</td><td>structlog (JSON in prod, console in dev)</td></tr>
+      <tr><td>Resilience</td><td>tenacity retry + exp. backoff, per-agent timeout</td></tr>
+      <tr><td>Frontend</td><td>React 18, TypeScript, Tailwind CSS, Vite, react-markdown</td></tr>
+      <tr><td>Containers</td><td>Docker multi-stage builds, Docker Compose v3.9</td></tr>
+      <tr><td>Reverse Proxy</td><td>Nginx (SPA routing + /api + /ws proxy)</td></tr>
+      <tr><td>CI/CD</td><td>GitHub Actions (lint → test → Docker push → EC2 deploy)</td></tr>
+      <tr><td>Deployment</td><td>AWS EC2 (Ubuntu 22.04), Docker Hub registry</td></tr>
+    </table>
+  </div>
+
+  
+  <h2>Project File Inventory (95 files)</h2>
+  <div class="file-tree">
+<span class="dir">agentforge/</span>
+├── <span class="file md">README.md</span>                         ← Complete documentation
+├── <span class="file yml">docker-compose.yml</span>               ← Full stack orchestration
+├── <span class="file cfg">.env.example</span>                     ← All env vars documented
+├── <span class="file cfg">pyproject.toml</span>                   ← pytest + build config
+│
+├── <span class="dir">backend/</span>
+│   ├── <span class="file py">main.py</span>                      ← FastAPI app factory + lifespan
+│   ├── <span class="file cfg">requirements.txt</span>            ← 40+ pinned dependencies
+│   ├── <span class="dir">core/</span>
+│   │   ├── <span class="file py">config.py</span>               ← Pydantic Settings (all env vars)
+│   │   ├── <span class="file py">logging.py</span>              ← structlog JSON logging
+│   │   ├── <span class="file py">exceptions.py</span>           ← Custom exception hierarchy
+│   │   └── <span class="file py">dependencies.py</span>         ← FastAPI DI (DB, Redis, Auth)
+│   ├── <span class="dir">agents/</span>
+│   │   ├── <span class="file py">base_agent.py</span>           ← Abstract base: retry, timing, logging
+│   │   ├── <span class="file py">researcher_agent.py</span>     ← FAISS + web search + LLM refine
+│   │   ├── <span class="file py">summarizer_agent.py</span>     ← Structured summarization
+│   │   ├── <span class="file py">critic_agent.py</span>         ← JSON score + retry routing
+│   │   ├── <span class="file py">fact_checker_agent.py</span>   ← Citation annotation
+│   │   └── <span class="file py">synthesizer_agent.py</span>    ← Final Markdown answer
+│   ├── <span class="dir">graph/</span>
+│   │   └── <span class="file py">workflow.py</span>             ← LangGraph StateGraph + conditional edges
+│   ├── <span class="dir">database/</span>
+│   │   ├── <span class="file py">session.py</span>              ← Async SQLAlchemy engine + Base
+│   │   └── <span class="file py">models.py</span>               ← 5 ORM tables
+│   ├── <span class="dir">models/</span>
+│   │   └── <span class="file py">schemas.py</span>              ← Pydantic request/response schemas
+│   ├── <span class="dir">services/</span>
+│   │   ├── <span class="file py">redis_service.py</span>         ← Cache, session state, rate limit
+│   │   ├── <span class="file py">neo4j_service.py</span>         ← KG CRUD + finding storage
+│   │   ├── <span class="file py">ingestion_service.py</span>    ← Chunking + FAISS + PG persistence
+│   │   ├── <span class="file py">audit_service.py</span>         ← Immutable audit log writer
+│   │   └── <span class="file py">websocket_manager.py</span>    ← WS connection registry
+│   ├── <span class="dir">vectorstore/</span>
+│   │   └── <span class="file py">faiss_store.py</span>          ← FAISS index + async embed + search
+│   ├── <span class="dir">api/routes/</span>
+│   │   ├── <span class="file py">research.py</span>             ← POST/GET research + background task
+│   │   ├── <span class="file py">documents.py</span>            ← Ingest + stats endpoints
+│   │   ├── <span class="file py">health.py</span>               ← Liveness + readiness probes
+│   │   └── <span class="file py">websocket.py</span>            ← WS /ws/{session_id} endpoint
+│   └── <span class="dir">tests/</span>
+│       ├── <span class="file py">conftest.py</span>             ← Shared fixtures, SQLite DB, mock LLM
+│       ├── <span class="dir">unit/</span>
+│       │   ├── <span class="file py">test_agents.py</span>       ← 10 agent unit tests
+│       │   ├── <span class="file py">test_workflow.py</span>     ← Routing + state tests
+│       │   └── <span class="file py">test_vectorstore.py</span> ← FAISS add/search tests
+│       └── <span class="dir">integration/</span>
+│           └── <span class="file py">test_api.py</span>         ← FastAPI endpoint contracts
+│
+├── <span class="dir">frontend/</span>
+│   ├── <span class="file ts">vite.config.ts</span>              ← Vite + React + proxy config
+│   ├── <span class="file cfg">package.json</span>               ← React 18 + Tailwind deps
+│   ├── <span class="file ts">tsconfig.json</span>               ← Strict TypeScript config
+│   └── <span class="dir">src/</span>
+│       ├── <span class="file tsx">App.tsx</span>                ← React Router root
+│       ├── <span class="file ts">index.css</span>              ← Tailwind directives + prose styles
+│       ├── <span class="dir">types/</span>         index.ts    ← All TypeScript interfaces
+│       ├── <span class="dir">utils/</span>
+│       │   ├── <span class="file ts">api.ts</span>             ← Axios client + all API calls
+│       │   └── <span class="file ts">helpers.ts</span>         ← cn(), formatMs(), scoreColor()
+│       ├── <span class="dir">hooks/</span>
+│       │   └── <span class="file ts">useResearchWebSocket.ts</span> ← WS hook with ping/pong
+│       ├── <span class="dir">pages/</span>
+│       │   └── <span class="file tsx">ResearchPage.tsx</span>   ← Main research page
+│       └── <span class="dir">components/</span>
+│           ├── <span class="file tsx">QueryForm.tsx</span>      ← Query input + examples + top-k
+│           ├── <span class="file tsx">AgentPipeline.tsx</span>  ← Live agent status timeline
+│           └── <span class="file tsx">ResearchResultPanel.tsx</span> ← Markdown answer + sources
+│
+├── <span class="dir">docker/</span>
+│   ├── <span class="file docker">Dockerfile.backend</span>     ← Multi-stage Python 3.12 → slim
+│   ├── <span class="file docker">Dockerfile.frontend</span>    ← Multi-stage Node 20 → Nginx
+│   └── <span class="file cfg">nginx.conf</span>               ← SPA routing + /api + /ws proxy
+│
+├── <span class="dir">sample_data/</span>
+│   ├── <span class="file">quantum_computing.txt</span>    ← Google Willow, IBM Condor, NISQ
+│   ├── <span class="file">llm_advances.txt</span>         ← Transformers, RAG, LoRA, RLHF
+│   └── <span class="file">crispr_medicine.txt</span>      ← Casgevy FDA approval, base editing
+│
+├── <span class="dir">docs/</span>
+│   ├── <span class="file md">api.md</span>                  ← REST + WebSocket API reference
+│   ├── <span class="file md">deployment.md</span>           ← EC2 + HTTPS + monitoring guide
+│   └── <span class="file md">testing.md</span>              ← pytest guide + mock strategies
+│
+└── <span class="dir">.github/workflows/</span>
+    └── <span class="file yml">ci-cd.yml</span>              ← Lint → Test → Docker Push → Deploy
+  </div>
+
+  
+  <h2>Deliverables Checklist</h2>
+  <ul class="checklist">
+    <li><span class="check">✓</span> Complete source code (backend + frontend + agents)</li>
+    <li><span class="check">✓</span> requirements.txt (40+ pinned packages)</li>
+    <li><span class="check">✓</span> Dockerfile.backend + Dockerfile.frontend (multi-stage)</li>
+    <li><span class="check">✓</span> docker-compose.yml (5 services + health checks)</li>
+    <li><span class="check">✓</span> README.md (quick start, API ref, schema, structure)</li>
+    <li><span class="check">✓</span> .env.example (all 30+ variables documented)</li>
+    <li><span class="check">✓</span> GitHub Actions CI/CD (lint → test → push → deploy)</li>
+    <li><span class="check">✓</span> API documentation (docs/api.md)</li>
+    <li><span class="check">✓</span> Database schema (5 tables + Neo4j schema)</li>
+    <li><span class="check">✓</span> Deployment guide (docs/deployment.md)</li>
+    <li><span class="check">✓</span> Architecture diagram (this page)</li>
+    <li><span class="check">✓</span> Sample dataset (3 documents, 3 domains)</li>
+    <li><span class="check">✓</span> Testing guide + 20+ test cases (docs/testing.md)</li>
+  </ul>
+
+  <footer>Made with IBM Bob</footer>
+</div>
+</body>
+</html>
