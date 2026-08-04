@@ -276,6 +276,15 @@ This repo includes a `render.yaml` manifest for Render.com.
 - Set `VITE_API_URL` to your deployed backend URL, e.g. `https://<your-backend>.onrender.com`.
 - The frontend will build and serve static assets via Nginx.
 
+### Deploying the frontend to Vercel
+- This frontend is built with **React + Vite**.
+- Create a new Vercel project and connect it to this GitHub repo.
+- Set the Root Directory to `frontend`.
+- Use the default build command: `npm run build`.
+- Use the default output directory: `dist`.
+- Add the environment variable `VITE_API_URL` in Vercel settings, pointing to your Render backend URL.
+- Do not commit `frontend/.env` or real API keys.
+
 ### Using the Render service ID
 - In Render, open `https://dashboard.render.com/services/srv-d9p05anqj5pc738g1110`.
 - Confirm the service name is `agentforge-backend-srv-d9p05anqj5pc738g1110`.
