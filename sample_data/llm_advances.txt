@@ -1,0 +1,29 @@
+Large Language Models (LLMs) are neural networks trained on vast text corpora using the Transformer architecture, which relies on self-attention mechanisms to model long-range dependencies in text.
+
+The Transformer Architecture:
+Introduced in "Attention Is All You Need" (Vaswani et al., 2017), transformers use multi-head self-attention to process sequences in parallel, overcoming the sequential bottleneck of RNNs. Each attention head learns different aspects of linguistic structure — syntax, semantics, coreference, etc.
+
+Model Scaling Laws:
+Kaplan et al. (2020) at OpenAI showed that model performance scales predictably with compute, parameters, and data. The "Chinchilla" paper (Hoffmann et al., 2022) refined this: for a given compute budget, models are significantly undertrained, and optimal training requires roughly 20 tokens per parameter.
+
+Key Models:
+- GPT-4 (OpenAI): Multimodal, ~1.8T parameters (estimated), state-of-the-art on many benchmarks
+- Claude 3.5 Sonnet (Anthropic): Excellent at reasoning, coding, and long-context tasks
+- Gemini 1.5 Pro (Google): 1M+ token context window, multimodal
+- Llama 3.1 (Meta): Open-weights, 405B parameter model competitive with closed models
+- Mistral/Mixtral: Mixture-of-Experts (MoE) architecture, efficient inference
+
+Mixture of Experts (MoE):
+MoE models activate only a subset of parameters per token using a learned routing mechanism. Mixtral 8x7B achieves GPT-3.5 quality with 2x lower inference cost, demonstrating MoE as a scalable efficiency technique.
+
+Retrieval-Augmented Generation (RAG):
+RAG combines LLMs with external knowledge retrieval, mitigating hallucination and knowledge cutoff limitations. Dense retrieval using embeddings (e.g., FAISS, Pinecone) retrieves relevant documents, which are prepended to the LLM context.
+
+Fine-tuning Approaches:
+- Full fine-tuning: Update all model weights (expensive, risk of catastrophic forgetting)
+- LoRA/QLoRA: Low-Rank Adaptation — insert trainable rank-decomposition matrices, reducing trainable parameters by 10,000x
+- RLHF: Reinforcement Learning from Human Feedback aligns model outputs with human preferences
+
+Constitutional AI (Anthropic) and RLAIF (RL from AI Feedback) represent advances in alignment without extensive human labeling.
+
+Hallucination remains a key challenge: LLMs confidently generate plausible but false information. Mitigation strategies include RAG, chain-of-thought prompting, self-consistency sampling, and factual grounding.

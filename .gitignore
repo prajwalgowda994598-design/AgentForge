@@ -1,40 +1,85 @@
+# AgentForge - .gitignore
+
 # Python
 __pycache__/
 *.py[cod]
 *$py.class
-.env
+*.so
+
+# Virtual environments
 .venv/
 venv/
-.env.local
-*.egg-info/
-*.egg
-build/
-dist/
-.eggs/
+env/
 
-# VSCode
-.vscode/
+# Environment secrets - NEVER commit .env
+.env
+!.env.example
 
-# Pytest
+# Databases
+*.db
+*.sqlite
+*.sqlite3
+
+# FAISS index
+vectorstore/faiss_index/
+*.faiss
+*.pkl
+
+# Pytest / coverage
 .pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
 
-# macOS
-.DS_Store
+# Mypy
+.mypy_cache/
 
-# Node
+# Ruff
+.ruff_cache/
+
+# Node.js / Frontend
 node_modules/
+frontend/dist/
+frontend/build/
+frontend/.vite/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Docker override (may contain local secrets)
+docker-compose.override.yml
 
 # Logs
 *.log
+logs/
 
-# IDEs
-.idea/
+# Distribution
+build/
+dist/
+*.egg-info/
+*.egg
 
-# Byte-compiled
-*.pyc
+# Local dev/debug scripts
+boot_test.py
+check_imports.py
+check_versions.py
+diagnose.py
+pathtest.py
+_probe.py
+write_env.py
+start_and_test.py
+/test_api.py
+list_free_models.py
+load_sample_data.py
+_write_gitignore.py
+$null
 
-# Local settings
-local_settings.py
-
-# FAISS index
-vectorstore/faiss_index/index.faiss
+# Misc
+*.bak
+*.tmp
+*.orig

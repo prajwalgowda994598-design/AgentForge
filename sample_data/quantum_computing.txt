@@ -1,0 +1,15 @@
+Quantum computing represents a fundamental shift in computation, using quantum mechanical phenomena such as superposition and entanglement to process information in ways that classical computers cannot efficiently replicate. Unlike classical bits that are either 0 or 1, quantum bits (qubits) can exist in superposition — representing both 0 and 1 simultaneously — enabling massive parallel computation.
+
+Key advances in 2024 include:
+
+1. IBM's Condor processor featuring over 1,000 qubits, marking a milestone in quantum hardware scaling. IBM also introduced error correction techniques that reduce quantum error rates by a factor of 100x compared to 2022 baselines.
+
+2. Google's Willow quantum chip demonstrated "beyond classical" computation — solving a specific benchmark problem in under 5 minutes that would take the fastest classical supercomputer 10 septillion years. This represents the strongest quantum advantage claim to date.
+
+3. Microsoft announced topological qubits, which are inherently more stable due to their non-Abelian anyon basis, potentially resolving the decoherence problem that plagues current superconducting qubit systems.
+
+Quantum computing applications are emerging in drug discovery, materials science, financial optimisation, and cryptography. Pharmaceutical companies are using quantum algorithms to simulate molecular interactions at the quantum level, potentially cutting drug discovery timelines from 10+ years to 2-3 years.
+
+Current limitations include decoherence (qubits losing their quantum state), error rates, extreme cooling requirements (near absolute zero), and the difficulty of scaling qubit systems while maintaining coherence. Most current systems are NISQ (Noisy Intermediate-Scale Quantum) devices with limited practical applications.
+
+Post-quantum cryptography is already being standardised by NIST, with algorithms like CRYSTALS-Kyber and CRYSTALS-Dilithium designed to resist quantum attacks on current encryption standards (RSA, ECC).

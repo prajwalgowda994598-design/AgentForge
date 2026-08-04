@@ -1,0 +1,26 @@
+CRISPR-Cas9 (Clustered Regularly Interspaced Short Palindromic Repeats) is a revolutionary gene-editing technology derived from the bacterial adaptive immune system. Jennifer Doudna and Emmanuelle Charpentier were awarded the 2020 Nobel Prize in Chemistry for its development.
+
+Mechanism:
+The Cas9 enzyme acts as molecular scissors guided by a programmable guide RNA (gRNA) to a specific DNA sequence. Upon binding, Cas9 creates a precise double-strand break in the DNA, triggering cellular repair mechanisms that can delete, replace, or insert genetic material.
+
+Medical Applications (2023-2024):
+1. Sickle Cell Disease and Beta-Thalassemia: Vertex Pharmaceuticals/CRISPR Therapeutics received FDA approval for Casgevy (exagamglogene autotemcel) in December 2023 — the world's first approved CRISPR therapy. It treats the root cause by reactivating fetal hemoglobin production.
+
+2. Cancer Treatment: CAR-T cell therapies enhanced with CRISPR editing are showing promise in clinical trials. Intellia Therapeutics' NTLA-2002 demonstrated 80%+ reduction in hereditary angioedema attacks in Phase 2 trials.
+
+3. HIV: In vivo CRISPR trials are targeting the removal of HIV proviral DNA from T-cells. Excision BioTherapeutics showed viral load reduction in early trials.
+
+4. High Cholesterol: CRISPR editing of PCSK9 gene in liver cells aims to permanently reduce LDL cholesterol — early trials show 48% reduction sustained over 18 months.
+
+Next-Generation Tools:
+- Base Editing: Makes precise single-letter changes without creating double-strand breaks, reducing off-target effects (David Liu, Broad Institute)
+- Prime Editing: "Search and replace" for DNA — can make all 12 types of point mutations plus small insertions/deletions
+- CRISPR activation/interference (CRISPRa/CRISPRi): Modulates gene expression without cutting DNA
+
+Challenges:
+- Off-target edits: Unintended mutations at similar DNA sequences
+- Delivery: Getting CRISPR machinery into the right cells in vivo (viral vectors, LNPs)
+- Germline editing ethics: Editing embryos remains banned or highly restricted globally
+- Mosaicism: Not all cells may be successfully edited
+
+The FDA approved CRISPR-based diagnostics and is developing specific regulatory frameworks for gene editing therapies. Global clinical trials increased 300% from 2020 to 2024.
