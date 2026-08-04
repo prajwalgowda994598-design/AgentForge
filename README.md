@@ -259,20 +259,28 @@ This repo includes a `render.yaml` manifest for Render.com.
 
 ### Backend setup
 - Connect this GitHub repo in Render.
-- Create a Web Service using `docker/Dockerfile.backend`.
-- Set environment variables in Render Dashboard:
+- Import `render.yaml` or create a Web Service named `agentforge-backend-srv-d9p05anqj5pc738g1110`.
+- Use `docker/Dockerfile.backend` as the deploy path.
+- Set environment variables in the Render dashboard:
   - `OPENROUTER_API_KEY` = your OpenRouter key
   - `EMBEDDING_PROVIDER` = `local`
   - `LOCAL_DEV` = `true`
   - `APP_DEBUG` = `false`
 - Do not commit secrets to git.
-- Render will deploy automatically on push.
-- API docs will be available at `https://<your-backend>.onrender.com/docs`.
+- Render will auto-deploy on push.
+- Swagger docs will be available at `https://<your-backend>.onrender.com/docs`.
 
 ### Frontend setup
-- Create a second Web Service using `docker/Dockerfile.frontend`.
+- Create a second Render Web Service named `agentforge-frontend`.
+- Use `docker/Dockerfile.frontend` as the deploy path.
 - Set `VITE_API_URL` to your deployed backend URL, e.g. `https://<your-backend>.onrender.com`.
 - The frontend will build and serve static assets via Nginx.
+
+### Using the Render service ID
+- In Render, open `https://dashboard.render.com/services/srv-d9p05anqj5pc738g1110`.
+- Confirm the service name is `agentforge-backend-srv-d9p05anqj5pc738g1110`.
+- If the service exists, update its repo to `https://github.com/prajwalgowda994598-design/AgentForge` and redeploy.
+- If not, create a new Web Service and optionally use the same name.
 
 ### Notes
 - Render free tier sleeps when idle. The first request after idle may take 30–60 seconds to wake up.

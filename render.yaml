@@ -3,7 +3,7 @@
 
 services:
   - type: web_service
-    name: AgentForge Backend
+    name: agentforge-backend-srv-d9p05anqj5pc738g1110
     env: docker
     repo: https://github.com/prajwalgowda994598-design/AgentForge
     branch: main
@@ -27,14 +27,14 @@ services:
     autoDeploy: true
 
   - type: web_service
-    name: AgentForge Frontend
+    name: agentforge-frontend
     env: docker
     repo: https://github.com/prajwalgowda994598-design/AgentForge
     branch: main
     dockerfilePath: docker/Dockerfile.frontend
     envVars:
       - key: VITE_API_URL
-        value: "https://your-backend-url.onrender.com"
+        value: "https://<your-backend>.onrender.com"
     instanceType: "starter"
     region: "oregon"
     autoDeploy: true
