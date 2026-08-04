@@ -24,6 +24,7 @@ from agentforge.backend.core.exceptions import (
     generic_exception_handler,
 )
 from agentforge.backend.core.logging import configure_logging, get_logger
+from agentforge.backend.database.session import AsyncSessionLocal
 
 configure_logging()
 logger = get_logger(__name__)
@@ -74,6 +75,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator:
     from agentforge.backend.graph.workflow import get_research_graph
     get_research_graph()
     logger.info("langgraph_ready")
+
+    # 6. Auto-load bundled sample data on first startup when the FAISS index is empty.
+    from agentforge.backend.services.ingestion_service import IngestionService
+    from agentforge.backend.vectorstore.faiss_store import get_vector_store
+
+    try:
+        vector_store = await get_vector_store()
+        if vector_store._index is not None and vector_store._index.ntotal == 0:
+            async with AsyncSessionLocal() as session:
+                ingestion = IngestionService(session, vector_store)
+                loaded = await ingestion.load_sample_dataset()
+                if loaded:
+                    logger.info("sample_data_loaded_on_startup", total_chunks=loaded)
+    except Exception as exc:
+        logger.warning("sample_data_autoload_failed", error=str(exc))
 
     logger.info("agentforge_started")
     yield  # ← application running

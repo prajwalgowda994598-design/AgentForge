@@ -1,0 +1,40 @@
+# Render deployment configuration for backend and frontend
+# See: https://render.com/docs/deploy-yaml
+
+services:
+  - type: web_service
+    name: AgentForge Backend
+    env: docker
+    repo: https://github.com/prajwalgowda994598-design/AgentForge
+    branch: main
+    dockerfilePath: docker/Dockerfile.backend
+    envVars:
+      - key: LOCAL_DEV
+        value: "true"
+      - key: EMBEDDING_PROVIDER
+        value: local
+      - key: OPENROUTER_API_KEY
+        value: "${OPENROUTER_API_KEY}"
+      - key: APP_DEBUG
+        value: "false"
+      - key: WORKERS
+        value: "1"
+    healthCheckPath: /health
+    buildCommand: ""
+    startCommand: ""
+    instanceType: "starter"
+    region: "oregon"
+    autoDeploy: true
+
+  - type: web_service
+    name: AgentForge Frontend
+    env: docker
+    repo: https://github.com/prajwalgowda994598-design/AgentForge
+    branch: main
+    dockerfilePath: docker/Dockerfile.frontend
+    envVars:
+      - key: VITE_API_URL
+        value: "https://your-backend-url.onrender.com"
+    instanceType: "starter"
+    region: "oregon"
+    autoDeploy: true

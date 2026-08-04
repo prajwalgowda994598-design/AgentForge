@@ -1,6 +1,8 @@
 # AgentForge 🤖
-## Autonomous Multi-Agent AI Research System
+## Portfolio project — local multi-agent RAG research assistant, LangGraph orchestration, zero-cost LLM via OpenRouter free tier
 
+[![Live Demo](https://img.shields.io/badge/demo-backend%20/docs-blue)](http://localhost:8000/docs)
+[![Live Demo](https://img.shields.io/badge/demo-frontend%20localhost:3000-blue)](http://localhost:3000)
 [![CI/CD](https://github.com/prajwalgowda994598-design/AgentForge/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/prajwalgowda994598-design/AgentForge/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -248,6 +250,34 @@ curl http://localhost:8000/api/v1/research \
 ws://localhost:8000/ws/{session_id}
 ```
 Events: `agent_status`, `stream_chunk`, `final_result`, `error`
+
+---
+
+## Render deployment
+
+This repo includes a `render.yaml` manifest for Render.com.
+
+### Backend setup
+- Connect this GitHub repo in Render.
+- Create a Web Service using `docker/Dockerfile.backend`.
+- Set environment variables in Render Dashboard:
+  - `OPENROUTER_API_KEY` = your OpenRouter key
+  - `EMBEDDING_PROVIDER` = `local`
+  - `LOCAL_DEV` = `true`
+  - `APP_DEBUG` = `false`
+- Do not commit secrets to git.
+- Render will deploy automatically on push.
+- API docs will be available at `https://<your-backend>.onrender.com/docs`.
+
+### Frontend setup
+- Create a second Web Service using `docker/Dockerfile.frontend`.
+- Set `VITE_API_URL` to your deployed backend URL, e.g. `https://<your-backend>.onrender.com`.
+- The frontend will build and serve static assets via Nginx.
+
+### Notes
+- Render free tier sleeps when idle. The first request after idle may take 30–60 seconds to wake up.
+- The backend auto-loads bundled sample data on first startup if the FAISS index is empty.
+- FAISS index files are git-ignored and rebuilt from `sample_data/` if missing.
 
 ---
 
