@@ -124,6 +124,34 @@ curl -X POST http://localhost:8000/api/v1/documents/load-sample
 
 ---
 
+## Run locally (one-click)
+
+If you want a single command to prepare the environment and run the backend + frontend for local development, use the provided one-click scripts in `scripts/`.
+
+- Windows (PowerShell):
+
+```powershell
+# from inside the agentforge folder
+.\scripts\run_local_dev.ps1
+```
+
+- macOS / Linux (Bash):
+
+```bash
+# from inside the agentforge folder
+./scripts/run_local_dev.sh
+```
+
+What the scripts do:
+- Create and/or activate a Python virtual environment (`.venv`) and install backend dependencies.
+- Install frontend dependencies (`npm ci`) if missing.
+- Start the FastAPI backend on port 8000 and the Vite frontend on port 3000 (or 5173 if configured).
+- Logs are written to `logs/backend.log` and `logs/frontend.log` so you can inspect startup output.
+
+If you prefer manual steps, see the "Local Development (without Docker)" section above.
+
+---
+
 ## Local Development (without Docker)
 
 ### Backend — no Docker, no API key needed for tests
