@@ -30,7 +30,7 @@ langgraph==0.1.14
 openai==1.35.7
 
 # ── Vector Store ──────────────────────────────────────────────────────────────
-faiss-cpu==1.15.0
+faiss-cpu==1.12.0
 numpy==1.26.4
 
 # ── Embeddings (local, free — downloads ~90 MB on first run) ─────────────────
