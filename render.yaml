@@ -4,10 +4,11 @@
 services:
   - type: web_service
     name: agentforge-backend-srv-d9p05anqj5pc738g1110
-    env: docker
+    env: python
     repo: https://github.com/prajwalgowda994598-design/AgentForge
     branch: main
-    dockerfilePath: docker/Dockerfile.backend
+    buildCommand: "pip install -r backend/requirements.txt"
+    startCommand: "uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: LOCAL_DEV
         value: "true"
@@ -20,8 +21,6 @@ services:
       - key: WORKERS
         value: "1"
     healthCheckPath: /health
-    buildCommand: ""
-    startCommand: ""
     instanceType: "starter"
     region: "oregon"
     autoDeploy: true
