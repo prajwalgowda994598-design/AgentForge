@@ -30,7 +30,7 @@ langgraph==0.1.14
 openai==1.35.7
 
 # ── Vector Store ──────────────────────────────────────────────────────────────
-faiss-cpu==1.8.0
+faiss-cpu==1.15.0
 numpy==1.26.4
 
 # ── Embeddings (local, free — downloads ~90 MB on first run) ─────────────────
@@ -41,7 +41,7 @@ langchain-huggingface==0.0.3
 sqlalchemy==2.0.31
 asyncpg==0.29.0
 alembic==1.13.2
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.12
 
 # ── Database – Neo4j ──────────────────────────────────────────────────────────
 neo4j==5.22.0
@@ -72,7 +72,7 @@ duckduckgo-search==6.2.6
 
 # ── Document Processing ───────────────────────────────────────────────────────
 beautifulsoup4==4.12.3
-pymupdf==1.24.7
+pymupdf==1.28.0
 
 # ── Testing ───────────────────────────────────────────────────────────────────
 pytest==8.2.2
