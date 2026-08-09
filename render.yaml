@@ -24,17 +24,14 @@ services:
   - type: web
     name: agentforge-backend
     runtime: python
+    repo: https://github.com/prajwalgowda994598-design/AgentForge
     region: oregon
     plan: starter
-
-    # Render clones the whole repo; rootDir narrows the context to agentforge/
-    rootDir: agentforge
 
     # Install deps + install the agentforge package itself (needed for imports)
     buildCommand: pip install -r backend/requirements-render.txt && pip install -e .
 
-    # rootDir is agentforge/, so PYTHONPATH=. puts agentforge/ on sys.path,
-    # making "import agentforge.backend.main" resolve correctly.
+    # Repo root IS the agentforge/ package dir, so PYTHONPATH=. is correct.
     startCommand: uvicorn agentforge.backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
 
     healthCheckPath: /health
@@ -103,8 +100,9 @@ services:
   - type: web
     name: agentforge-frontend
     runtime: static
+    repo: https://github.com/prajwalgowda994598-design/AgentForge
 
-    rootDir: agentforge/frontend
+    rootDir: frontend
 
     buildCommand: npm install --legacy-peer-deps && npm run build
 
