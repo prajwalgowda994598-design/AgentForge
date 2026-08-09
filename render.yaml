@@ -1,40 +1,131 @@
-# Render deployment configuration for backend and frontend
-# See: https://render.com/docs/deploy-yaml
+# ─────────────────────────────────────────────────────────────────────────────
+# AgentForge – Render deployment configuration
+#
+# Services:
+#   agentforge-backend  – FastAPI on a free Web Service
+#   agentforge-frontend – React SPA on a free Static Site
+#
+# Deploy steps:
+#   1. Push this repo to GitHub
+#   2. Go to https://dashboard.render.com → New → Blueprint
+#   3. Connect your repo — Render will find this file automatically
+#   4. Add environment variables marked "sync: false" in the Render dashboard:
+#        OPENROUTER_API_KEY   →  your sk-or-v1-... key
+#        SECRET_KEY           →  any random 64-char string
+#
+# After first deploy the backend URL will look like:
+#   https://agentforge-backend.onrender.com
+# Copy it, then update the frontend's VITE_API_URL below to match.
+# ─────────────────────────────────────────────────────────────────────────────
 
 services:
-  - type: web_service
-    name: agentforge-backend-srv-d9p05anqj5pc738g1110
-    env: python
-    repo: https://github.com/prajwalgowda994598-design/AgentForge
-    branch: main
-    pythonVersion: "3.11.9"
-    buildCommand: "python -m pip install -r backend/requirements.txt"
-    startCommand: "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+
+  # ── Backend – FastAPI ───────────────────────────────────────────────────────
+  - type: web
+    name: agentforge-backend
+    runtime: python
+    region: oregon
+    plan: free
+
+    # Render clones the whole repo; rootDir narrows the context to agentforge/
+    rootDir: agentforge
+
+    buildCommand: pip install -r backend/requirements-render.txt
+
+    # PYTHONPATH must point one level above the agentforge/ package directory
+    # so "import agentforge.backend.main" resolves correctly.
+    # Render sets the working directory to rootDir, so PYTHONPATH=. means
+    # the parent of agentforge/backend/ — i.e. agentforge/ itself — is on sys.path.
+    startCommand: >
+      PYTHONPATH=/opt/render/project/src
+      uvicorn agentforge.backend.main:app
+      --host 0.0.0.0
+      --port $PORT
+      --workers 1
+      --log-level info
+
+    healthCheckPath: /health
+
     envVars:
+      # ── App ──────────────────────────────────────────────────────────────────
+      - key: ENVIRONMENT
+        value: production
       - key: LOCAL_DEV
-        value: "true"
-      - key: EMBEDDING_PROVIDER
-        value: local
-      - key: OPENROUTER_API_KEY
-        value: "${OPENROUTER_API_KEY}"
+        value: "true"           # SQLite + FakeRedis — no Postgres/Redis needed
       - key: APP_DEBUG
         value: "false"
-      - key: WORKERS
-        value: "1"
-    healthCheckPath: /health
-    instanceType: "starter"
-    region: "oregon"
-    autoDeploy: true
+      - key: LOG_LEVEL
+        value: INFO
+      - key: LOG_JSON
+        value: "true"
 
-  - type: web_service
+      # ── Security (set in Render dashboard — never commit real values) ─────
+      - key: SECRET_KEY
+        sync: false             # fill in dashboard: any 64-char random string
+      - key: ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+
+      # ── LLM ──────────────────────────────────────────────────────────────────
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: OPENROUTER_API_KEY
+        sync: false             # fill in dashboard: sk-or-v1-...
+      - key: OPENROUTER_BASE_URL
+        value: https://openrouter.ai/api/v1
+      - key: OPENROUTER_MODEL
+        value: nvidia/nemotron-3-super-120b-a12b:free
+      - key: OPENROUTER_SITE_URL
+        value: https://agentforge-frontend.onrender.com
+      - key: OPENROUTER_SITE_NAME
+        value: AgentForge
+
+      # ── Embeddings ────────────────────────────────────────────────────────────
+      - key: EMBEDDING_PROVIDER
+        value: local             # free — downloads ~90 MB model on first start
+      - key: FAISS_DIMENSION
+        value: "384"
+      - key: FAISS_INDEX_PATH
+        value: /tmp/faiss_index
+
+      # ── Agent tuning ─────────────────────────────────────────────────────────
+      - key: AGENT_TIMEOUT_SECONDS
+        value: "180"
+      - key: OPENAI_MAX_TOKENS
+        value: "1024"
+      - key: CRITIC_PASS_THRESHOLD
+        value: "0.7"
+      - key: MAX_RESEARCH_ITERATIONS
+        value: "3"
+
+      # ── CORS — allow the frontend origin ─────────────────────────────────────
+      - key: CORS_ORIGINS_STR
+        value: https://agentforge-frontend.onrender.com,http://localhost:3000,http://localhost:5173
+
+
+  # ── Frontend – React SPA ────────────────────────────────────────────────────
+  - type: web
     name: agentforge-frontend
-    env: docker
-    repo: https://github.com/prajwalgowda994598-design/AgentForge
-    branch: main
-    dockerfilePath: docker/Dockerfile.frontend
+    runtime: static
+    region: oregon
+    plan: free
+
+    rootDir: agentforge/frontend
+
+    buildCommand: npm ci --legacy-peer-deps && npm run build
+
+    staticPublishPath: dist
+
+    # SPA routing — every path serves index.html so React Router works
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
     envVars:
+      # Must match the backend service name above (Render assigns this URL)
       - key: VITE_API_URL
-        value: "https://<your-backend>.onrender.com"
-    instanceType: "starter"
-    region: "oregon"
-    autoDeploy: true
+        value: https://agentforge-backend.onrender.com
+      - key: VITE_WS_URL
+        value: wss://agentforge-backend.onrender.com

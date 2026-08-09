@@ -6,6 +6,8 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![React](https://img.shields.io/badge/frontend-React%2018%20%2B%20TypeScript-61dafb.svg)](https://react.dev)
+[![Tests](https://img.shields.io/badge/tests-45%20passing-brightgreen.svg)](#testing)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/prajwalgowda994598-design/AgentForge)
 
 ---
 
@@ -251,14 +253,19 @@ docker compose up --build
 
 ## Deployment (Render)
 
-The repo includes a `render.yaml` manifest.
+The repo includes a [`render.yaml`](render.yaml) Blueprint manifest.
 
-1. Fork this repo and connect it to [Render](https://render.com).
-2. Render auto-detects `render.yaml` and creates backend + frontend services.
-3. In the Render dashboard, set:
-   - `OPENROUTER_API_KEY` — your OpenRouter key
-   - `SECRET_KEY` — a random 64-char string
-4. Push to `main` — Render deploys automatically.
+**One-click deploy:** click the button at the top of this README.
+
+Or manually:
+1. Go to [dashboard.render.com](https://dashboard.render.com) → **New → Blueprint**
+2. Connect your fork of this repo — Render finds `render.yaml` automatically
+3. In the Render dashboard set two secrets:
+   - `agentforge-backend` → `OPENROUTER_API_KEY` — your `sk-or-v1-...` key ([get one free](https://openrouter.ai/keys))
+   - `agentforge-backend` → `SECRET_KEY` — any 64-char random string
+4. Click **Manual Deploy → Deploy latest commit**
+
+The backend cold-starts in ~60 s on the first request (sentence-transformers model download). Subsequent requests are fast. Both services run on Render's **free tier** — no credit card needed.
 
 ---
 

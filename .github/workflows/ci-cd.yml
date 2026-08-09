@@ -54,7 +54,7 @@ jobs:
           cache-dependency-path: agentforge/backend/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r backend/requirements.txt
+        run: pip install -r backend/requirements-render.txt pytest==8.2.2 pytest-asyncio==0.23.7 pytest-mock==3.14.0 pytest-cov==5.0.0
         working-directory: agentforge
 
       - name: Run Ruff linter
