@@ -19,7 +19,6 @@ services:
         value: "1"
     healthCheckPath: /health
     instanceType: "starter"
-    region: "oregon"
     autoDeploy: true
 
   - type: web
@@ -32,5 +31,4 @@ services:
       - key: VITE_API_URL
         value: "https://<your-backend>.onrender.com"
     instanceType: "starter"
-    region: "oregon"
     autoDeploy: true
