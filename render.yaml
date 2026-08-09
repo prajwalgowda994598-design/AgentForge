@@ -25,29 +25,24 @@ services:
     name: agentforge-backend
     runtime: python
     region: oregon
-    plan: free
+    plan: starter
 
     # Render clones the whole repo; rootDir narrows the context to agentforge/
     rootDir: agentforge
 
-    buildCommand: pip install -r backend/requirements-render.txt
+    # Install deps + install the agentforge package itself (needed for imports)
+    buildCommand: pip install -r backend/requirements-render.txt && pip install -e .
 
-    # PYTHONPATH must point one level above the agentforge/ package directory
-    # so "import agentforge.backend.main" resolves correctly.
-    # Render sets the working directory to rootDir, so PYTHONPATH=. means
-    # the parent of agentforge/backend/ — i.e. agentforge/ itself — is on sys.path.
-    startCommand: >
-      PYTHONPATH=/opt/render/project/src
-      uvicorn agentforge.backend.main:app
-      --host 0.0.0.0
-      --port $PORT
-      --workers 1
-      --log-level info
+    # rootDir is agentforge/, so PYTHONPATH=. puts agentforge/ on sys.path,
+    # making "import agentforge.backend.main" resolve correctly.
+    startCommand: uvicorn agentforge.backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
 
     healthCheckPath: /health
 
     envVars:
       # ── App ──────────────────────────────────────────────────────────────────
+      - key: PYTHONPATH
+        value: /opt/render/project/src
       - key: ENVIRONMENT
         value: production
       - key: LOCAL_DEV
@@ -111,9 +106,9 @@ services:
 
     rootDir: agentforge/frontend
 
-    buildCommand: npm ci --legacy-peer-deps && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
 
-    staticPublishPath: dist
+    staticPublishPath: ./dist
 
     # SPA routing — every path serves index.html so React Router works
     routes:
