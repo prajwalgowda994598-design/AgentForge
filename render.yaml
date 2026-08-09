@@ -12,10 +12,7 @@
 #   4. Add environment variables marked "sync: false" in the Render dashboard:
 #        OPENROUTER_API_KEY   →  your sk-or-v1-... key
 #        SECRET_KEY           →  any random 64-char string
-#
-# After first deploy the backend URL will look like:
-#   https://agentforge-backend.onrender.com
-# Copy it, then update the frontend's VITE_API_URL below to match.
+#        OPENAI_API_KEY       →  same OpenRouter key (used for embeddings)
 # ─────────────────────────────────────────────────────────────────────────────
 
 services:
@@ -25,45 +22,39 @@ services:
     name: agentforge-backend
     runtime: python
     repo: https://github.com/prajwalgowda994598-design/AgentForge
+    branch: main
     region: oregon
     plan: starter
 
-    # Install deps + install the agentforge package itself (needed for imports)
-    buildCommand: pip install -r backend/requirements-render.txt && pip install -e .
+    buildCommand: pip install -r backend/requirements-render.txt
 
-    # Repo root IS the agentforge/ package dir, so PYTHONPATH=. is correct.
-    startCommand: uvicorn agentforge.backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
 
     healthCheckPath: /health
 
     envVars:
-      # ── App ──────────────────────────────────────────────────────────────────
       - key: PYTHONPATH
         value: /opt/render/project/src
       - key: ENVIRONMENT
         value: production
       - key: LOCAL_DEV
-        value: "true"           # SQLite + FakeRedis — no Postgres/Redis needed
+        value: "true"
       - key: APP_DEBUG
         value: "false"
       - key: LOG_LEVEL
         value: INFO
       - key: LOG_JSON
         value: "true"
-
-      # ── Security (set in Render dashboard — never commit real values) ─────
       - key: SECRET_KEY
-        sync: false             # fill in dashboard: any 64-char random string
+        sync: false
       - key: ALGORITHM
         value: HS256
       - key: ACCESS_TOKEN_EXPIRE_MINUTES
         value: "60"
-
-      # ── LLM ──────────────────────────────────────────────────────────────────
       - key: LLM_PROVIDER
         value: openrouter
       - key: OPENROUTER_API_KEY
-        sync: false             # fill in dashboard: sk-or-v1-...
+        sync: false
       - key: OPENROUTER_BASE_URL
         value: https://openrouter.ai/api/v1
       - key: OPENROUTER_MODEL
@@ -72,16 +63,18 @@ services:
         value: https://agentforge-frontend.onrender.com
       - key: OPENROUTER_SITE_NAME
         value: AgentForge
-
-      # ── Embeddings ────────────────────────────────────────────────────────────
       - key: EMBEDDING_PROVIDER
-        value: local             # free — downloads ~90 MB model on first start
+        value: openai
+      - key: OPENAI_EMBEDDING_MODEL
+        value: text-embedding-3-small
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: OPENAI_BASE_URL
+        value: https://openrouter.ai/api/v1
       - key: FAISS_DIMENSION
-        value: "384"
+        value: "1536"
       - key: FAISS_INDEX_PATH
         value: /tmp/faiss_index
-
-      # ── Agent tuning ─────────────────────────────────────────────────────────
       - key: AGENT_TIMEOUT_SECONDS
         value: "180"
       - key: OPENAI_MAX_TOKENS
@@ -90,8 +83,6 @@ services:
         value: "0.7"
       - key: MAX_RESEARCH_ITERATIONS
         value: "3"
-
-      # ── CORS — allow the frontend origin ─────────────────────────────────────
       - key: CORS_ORIGINS_STR
         value: https://agentforge-frontend.onrender.com,http://localhost:3000,http://localhost:5173
 
@@ -101,6 +92,7 @@ services:
     name: agentforge-frontend
     runtime: static
     repo: https://github.com/prajwalgowda994598-design/AgentForge
+    branch: main
 
     rootDir: frontend
 
@@ -108,14 +100,12 @@ services:
 
     staticPublishPath: ./dist
 
-    # SPA routing — every path serves index.html so React Router works
     routes:
       - type: rewrite
         source: /*
         destination: /index.html
 
     envVars:
-      # Must match the backend service name above (Render assigns this URL)
       - key: VITE_API_URL
         value: https://agentforge-backend.onrender.com
       - key: VITE_WS_URL
