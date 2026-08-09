@@ -1,8 +1,6 @@
 # ─────────────────────────────────────────────────────────────────────────────
 # AgentForge – Render/Production Python Dependencies
-#
-# Pinned to the exact versions confirmed working locally (Python 3.11+).
-# Excludes dev/test packages and heavy packages not needed in production.
+# Python 3.11 (pinned via .python-version)
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Web Framework ──────────────────────────────────────────────────────────────
@@ -14,30 +12,30 @@ python-multipart==0.0.9
 # ── Async / HTTP ───────────────────────────────────────────────────────────────
 httpx==0.27.0
 aiofiles==23.2.1
-websockets==12.0
+websockets>=14.0
 
-# ── Async SQLite (LOCAL_DEV=true — no Postgres needed on Render free tier) ────
+# ── Async SQLite ──────────────────────────────────────────────────────────────
 aiosqlite==0.19.0
 
-# ── LangChain Ecosystem (versions confirmed working) ─────────────────────────
+# ── LangChain Ecosystem ───────────────────────────────────────────────────────
 langchain==1.3.14
 langchain-core==1.5.1
 langchain-community==0.4.2
 langchain-openai==1.4.1
 langgraph==1.2.9
 
-# ── OpenAI SDK ─────────────────────────────────────────────────────────────────
+# ── OpenAI SDK ────────────────────────────────────────────────────────────────
 openai==2.48.0
 
 # ── Vector Store ──────────────────────────────────────────────────────────────
 faiss-cpu==1.12.0
 numpy>=1.26.4,<3.0
 
-# ── Local Embeddings (free — downloads ~90 MB model on first start) ──────────
-sentence-transformers==5.4.1
-langchain-huggingface==1.2.2
+# ── Local Embeddings (disabled — torch alone exceeds 512MB free tier RAM) ─────
+# sentence-transformers==5.4.1
+# langchain-huggingface==1.2.2
 
-# ── Database (SQLite in prod via LOCAL_DEV=true) ──────────────────────────────
+# ── Database ──────────────────────────────────────────────────────────────────
 sqlalchemy==2.0.31
 asyncpg==0.30.0
 alembic==1.13.2
@@ -47,8 +45,9 @@ redis==5.0.7
 fakeredis==2.23.3
 
 # ── Configuration & Validation ────────────────────────────────────────────────
+# pydantic-settings>=2.10.1 required by langchain-community==0.4.2
 pydantic[email]==2.13.3
-pydantic-settings==2.3.4
+pydantic-settings==2.10.1
 email-validator==2.2.0
 python-dotenv==1.0.1
 
@@ -63,11 +62,8 @@ structlog==24.2.0
 # ── Resilience ────────────────────────────────────────────────────────────────
 tenacity==8.5.0
 
-# ── Web Search (actual installed version) ────────────────────────────────────
+# ── Web Search ────────────────────────────────────────────────────────────────
 duckduckgo-search==8.1.1
 
 # ── Document Processing ───────────────────────────────────────────────────────
 beautifulsoup4==4.12.3
-
-# NOTE: pymupdf (PDF support) is heavy and not needed for the core demo.
-# Add back if you need PDF ingestion: pymupdf==1.28.0
