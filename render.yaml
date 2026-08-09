@@ -2,7 +2,7 @@
 # See: https://render.com/docs/deploy-yaml
 
 services:
-  - type: web_service
+  - type: web
     name: agentforge-backend-srv-d9p05anqj5pc738g1110
     env: python
     repo: https://github.com/prajwalgowda994598-design/AgentForge
@@ -26,7 +26,7 @@ services:
     region: "oregon"
     autoDeploy: true
 
-  - type: web_service
+  - type: web
     name: agentforge-frontend
     env: docker
     repo: https://github.com/prajwalgowda994598-design/AgentForge
@@ -36,5 +36,4 @@ services:
       - key: VITE_API_URL
         value: "https://<your-backend>.onrender.com"
     instanceType: "starter"
-    region: "oregon"
     autoDeploy: true
