@@ -38,7 +38,7 @@ echo [4/4] Configuring local dev environment...
 REM %~dp0 is the agentforge\ folder. One level up is Project01\ (the package root).
 for %%I in ("%~dp0..") do set "PYTHONPATH=%%~fI"
 
-REM ── Hard defaults — overridden by .env below if present ───────────────────────
+REM ── Hard defaults (overridden by .env when present) ───────────────────────────
 set LOCAL_DEV=true
 set ENVIRONMENT=development
 set APP_DEBUG=true
@@ -47,31 +47,23 @@ set FAISS_INDEX_PATH=./vectorstore/faiss_index
 set FAISS_DIMENSION=384
 set SECRET_KEY=local-dev-secret-key-change-in-production
 set LLM_PROVIDER=openrouter
-REM Use a model known to be available on OpenRouter free tier.
-REM Override in .env with:  OPENROUTER_MODEL=<model>
-REM List current free models:  python list_free_models.py
 set OPENROUTER_MODEL=nvidia/nemotron-3-super-120b-a12b:free
 set OPENROUTER_BASE_URL=https://openrouter.ai/api/v1
 set OPENROUTER_SITE_URL=http://localhost:3000
 set OPENROUTER_SITE_NAME=AgentForge
 set EMBEDDING_PROVIDER=local
 
-setlocal enabledelayedexpansion
-
-REM ── Load .env file — values here WIN over the defaults above ──────────────────
+REM ── Load .env via helper script ───────────────────────────────────────────────
+REM   _load_env.py writes SET "KEY=VALUE" lines to a temp .bat.
+REM   We then read each line with for /f "tokens=1* delims= " to execute SET
+REM   directly in this process (CALL would set vars in a child scope only).
 if exist ".env" (
     echo      Loading .env file...
-    for /f "usebackq tokens=1,* delims==" %%A in (".env") do (
-        set "_LINE=%%A"
-        if not "!_LINE!"=="" (
-            set "_FIRST=!_LINE:~0,1!"
-            if not "!_FIRST!"=="#" (
-                set "VALUE=%%B"
-                for /f "delims=#" %%C in ("!VALUE!") do set "VALUE=%%C"
-                REM Trim trailing space
-                for /f "tokens=* delims= " %%D in ("!VALUE!") do set "VALUE=%%D"
-                set "%%A=!VALUE!"
-            )
+    for /f "usebackq delims=" %%P in (`python "%~dp0_load_env.py" ".env" 2^>nul`) do set "_ENVBAT=%%P"
+    if defined _ENVBAT (
+        if exist "%_ENVBAT%" (
+            for /f "usebackq tokens=*" %%L in ("%_ENVBAT%") do %%L
+            del "%_ENVBAT%" >nul 2>&1
         )
     )
     echo      .env loaded.

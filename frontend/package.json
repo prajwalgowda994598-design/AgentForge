@@ -2,6 +2,7 @@
   "name": "agentforge-frontend",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "AgentForge – React frontend for the Autonomous Multi-Agent AI Research System",
   "scripts": {
     "dev": "vite",

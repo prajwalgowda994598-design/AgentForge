@@ -7,9 +7,9 @@ services:
     env: python
     repo: https://github.com/prajwalgowda994598-design/AgentForge
     branch: main
-    pythonVersion: "3.12.18"
-    buildCommand: "pip install -r backend/requirements.txt"
-    startCommand: "PYTHONPATH=. uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
+    pythonVersion: "3.11.9"
+    buildCommand: "python -m pip install -r backend/requirements.txt"
+    startCommand: "python -m uvicorn backend.main:app --host 0.0.0.0 --port $PORT"
     envVars:
       - key: LOCAL_DEV
         value: "true"

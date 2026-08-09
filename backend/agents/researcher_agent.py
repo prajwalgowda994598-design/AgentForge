@@ -5,10 +5,19 @@ Searches FAISS + web, extracts key facts using the LLM.
 Compatible with LangChain ≥ 1.x (uses ainvoke directly).
 """
 
+import warnings
 from typing import Any, Dict, List
 
 import httpx
 from langchain_core.messages import HumanMessage, SystemMessage
+
+# Suppress the rename warning from duckduckgo_search (package was renamed to ddgs
+# but the old package is still installed and functional — we use it directly).
+warnings.filterwarnings(
+    "ignore",
+    category=RuntimeWarning,
+    message=".*duckduckgo_search.*renamed.*",
+)
 
 from agentforge.backend.agents.base_agent import BaseAgent, _RETRYABLE_EXCEPTIONS
 from agentforge.backend.core.config import settings
@@ -52,13 +61,24 @@ class ResearcherAgent(BaseAgent):
 
         if iteration == 0 or avg_score < 0.5:
             try:
-                import asyncio, concurrent.futures
-                from langchain_community.tools import DuckDuckGoSearchRun
-                _search_fn = DuckDuckGoSearchRun().run
+                import asyncio
+                from duckduckgo_search import DDGS
+
+                def _ddg_search(q: str) -> List[str]:
+                    """Run DuckDuckGo text search synchronously and return snippets."""
+                    results = DDGS().text(q, max_results=5)
+                    snippets = []
+                    for r in results or []:
+                        body = r.get("body", "").strip()
+                        title = r.get("title", "").strip()
+                        href = r.get("href", "")
+                        if body:
+                            snippets.append(f"{title}: {body} [{href}]" if title else body)
+                    return snippets
+
                 loop = asyncio.get_event_loop()
-                web_result = await loop.run_in_executor(None, _search_fn, query)
-                if web_result:
-                    web_snippets = [s.strip() for s in web_result.split("\n\n") if s.strip()][:5]
+                web_snippets = await loop.run_in_executor(None, _ddg_search, query)
+                if web_snippets:
                     self.logger.info("web_search_complete", snippets=len(web_snippets))
             except _RETRYABLE_EXCEPTIONS as exc:
                 # Transient network failure — log clearly, continue without web results.
