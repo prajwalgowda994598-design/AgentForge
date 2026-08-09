@@ -108,7 +108,6 @@ services:
   - type: web
     name: agentforge-frontend
     runtime: static
-    plan: free
 
     rootDir: agentforge/frontend
 
