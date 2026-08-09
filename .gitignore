@@ -83,3 +83,15 @@ $null
 *.bak
 *.tmp
 *.orig
+
+# Diagnostic/scratch scripts generated during development
+_*.py
+_*.bat
+_*.ps1
+e2e_test.py
+run_e2e.py
+tmp_*.py
+tmp_*.sh
+
+# Local SQLite database
+agentforge_local.db

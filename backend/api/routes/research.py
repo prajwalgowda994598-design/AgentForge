@@ -10,7 +10,6 @@ GET  /sessions          – List recent sessions for the current user
 """
 
 import asyncio
-import concurrent.futures
 import time
 import traceback
 import uuid
@@ -39,20 +38,15 @@ router = APIRouter(prefix="/research", tags=["research"])
 logger = get_logger(__name__)
 
 
-# ── Thread pool for heavy pipeline work ───────────────────────────────────────
-# The research pipeline (LLM calls + embeddings + web search) is CPU and I/O
-# bound in ways that block the asyncio event loop even with run_in_executor,
-# because LangChain's internals use synchronous httpx internally.
-# Running the whole pipeline in its own OS thread with its own event loop
-# keeps the Uvicorn event loop free for polling and other requests.
-_PIPELINE_EXECUTOR = concurrent.futures.ThreadPoolExecutor(
-    max_workers=4, thread_name_prefix="pipeline"
-)
-
-
-def _run_pipeline_in_thread(session_id: str, query: str, top_k: int, user_id):
-    """Entry point for the pipeline thread — runs its own asyncio event loop."""
-    asyncio.run(_run_workflow_background(session_id, query, top_k, user_id))
+# NOTE: the pipeline background coroutine runs directly on the Uvicorn event loop
+# via asyncio.create_task() (see submit_research).  Earlier versions ran it in a
+# dedicated ThreadPoolExecutor with asyncio.run(), but the OpenAI SDK v2 internally
+# calls asyncio.to_thread() / loop.run_in_executor(None, ...) on the *first* HTTP
+# request to detect the host platform.  When the secondary asyncio.run() loop
+# completes, Python shuts down the *default* ThreadPoolExecutor before any pending
+# tasks finish, causing:
+#   RuntimeError: cannot schedule new futures after interpreter shutdown
+# Running as a plain Task on the main Uvicorn loop avoids this entirely.
 
 
 # ── Background Task ────────────────────────────────────────────────────────────
@@ -234,17 +228,19 @@ async def submit_research(
     )
     await db.commit()
 
-    # Submit pipeline to a dedicated thread pool so it runs in its own
-    # event loop and never blocks Uvicorn's event loop.
-    # BackgroundTasks is only used to register the fire-and-forget call.
-    loop = asyncio.get_event_loop()
-    loop.run_in_executor(
-        _PIPELINE_EXECUTOR,
-        _run_pipeline_in_thread,
-        session_id,
-        body.query,
-        body.top_k,
-        user["user_id"] if user else None,
+    # Schedule the pipeline as a background task on the *current* Uvicorn event
+    # loop.  Using asyncio.create_task() keeps everything on one loop, which lets
+    # the OpenAI SDK's internal asyncio.to_thread() / run_in_executor(None, ...)
+    # calls work correctly without hitting the "interpreter shutdown" crash.
+    # The LLM and embedding calls are I/O-bound (httpx), so they yield the loop
+    # naturally and don't need a separate thread.
+    asyncio.create_task(
+        _run_workflow_background(
+            session_id,
+            body.query,
+            body.top_k,
+            user["user_id"] if user else None,
+        )
     )
 
     return {

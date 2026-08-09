@@ -1,71 +1,23 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# AgentForge – Local Development Requirements (No Docker required)
+# AgentForge – Local Development Dependencies
 #
-# Differences from production requirements.txt:
-#   • aiosqlite  instead of asyncpg  (SQLite replaces PostgreSQL locally)
-#   • fakeredis  instead of redis    (in-process Redis mock)
-#   • neo4j omitted                  (graph features disabled locally)
-#   • Updated versions for Python 3.14 compatibility
+# Same as requirements-render.txt plus test/lint tools.
+# Install with:  pip install -r backend/requirements-local.txt
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ── Web Framework ──────────────────────────────────────────────────────────────
-fastapi==0.111.0
-uvicorn[standard]==0.30.1
-python-multipart==0.0.9
+# All production deps
+-r requirements-render.txt
 
-# ── Async / HTTP ───────────────────────────────────────────────────────────────
-httpx==0.27.0
-aiofiles==23.2.1
-websockets==12.0
-
-# ── LangChain Ecosystem (latest for Python 3.14) ──────────────────────────────
-langchain==0.2.6
-langchain-core==0.2.22
-langchain-community==0.2.6
-langchain-openai==0.1.14
-langgraph==0.1.14
-
-# ── OpenAI ─────────────────────────────────────────────────────────────────────
-openai==1.35.7
-
-# ── Vector Store ──────────────────────────────────────────────────────────────
-faiss-cpu==1.15.0
-numpy==1.26.4
-
-# ── Database – SQLite (replaces PostgreSQL for local dev) ────────────────────
-sqlalchemy
-aiosqlite
-
-# ── Cache – FakeRedis (replaces Redis for local dev) ─────────────────────────
-fakeredis[aioredis]
-redis
-
-# ── Configuration & Validation ────────────────────────────────────────────────
-pydantic
-pydantic-settings
-python-dotenv
-
-# ── Auth ──────────────────────────────────────────────────────────────────────
-python-jose[cryptography]
-passlib[bcrypt]
-
-# ── Logging ───────────────────────────────────────────────────────────────────
-structlog
-
-# ── Resilience ────────────────────────────────────────────────────────────────
-tenacity
-
-# ── Embeddings (local free option, no API key needed) ────────────────────────
-# ~500 MB install — downloads PyTorch CPU + sentence-transformers model
-sentence-transformers
-langchain-huggingface
-
-# ── Web Search Tool ───────────────────────────────────────────────────────────
-# ddgs is the current standalone package (duckduckgo-search was renamed)
-duckduckgo-search
-ddgs
+# ── Local-only extras ─────────────────────────────────────────────────────────
+pymupdf==1.28.0           # PDF ingestion (optional)
 
 # ── Testing ───────────────────────────────────────────────────────────────────
-pytest
-pytest-asyncio
-pytest-mock
+pytest==8.2.2
+pytest-asyncio==0.23.7
+pytest-mock==3.14.0
+pytest-cov==5.0.0
+httpx==0.27.0
+
+# ── Linting / Type checking ───────────────────────────────────────────────────
+ruff==0.5.1
+mypy==1.10.1

@@ -1,9 +1,8 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# AgentForge – Python Backend Dependencies
+# AgentForge – Render/Production Python Dependencies
 #
-# Pinned to the exact versions confirmed working locally (Python 3.12+).
-# For Render/production: use requirements-render.txt (lighter, no test tools).
-# For local dev + tests: use requirements-local.txt (adds test/lint tools).
+# Pinned to the exact versions confirmed working locally (Python 3.11+).
+# Excludes dev/test packages and heavy packages not needed in production.
 # ─────────────────────────────────────────────────────────────────────────────
 
 # ── Web Framework ──────────────────────────────────────────────────────────────
@@ -17,7 +16,7 @@ httpx==0.27.0
 aiofiles==23.2.1
 websockets==12.0
 
-# ── Async SQLite (local dev + tests, no Docker needed) ────────────────────────
+# ── Async SQLite (LOCAL_DEV=true — no Postgres needed on Render free tier) ────
 aiosqlite==0.19.0
 
 # ── LangChain Ecosystem (versions confirmed working) ─────────────────────────
@@ -34,22 +33,18 @@ openai==2.48.0
 faiss-cpu==1.12.0
 numpy>=1.26.4,<3.0
 
-# ── Local Embeddings (free — downloads ~90 MB model on first run) ─────────────
+# ── Local Embeddings (free — downloads ~90 MB model on first start) ──────────
 sentence-transformers==5.4.1
 langchain-huggingface==1.2.2
 
-# ── Database – PostgreSQL (production) ────────────────────────────────────────
+# ── Database (SQLite in prod via LOCAL_DEV=true) ──────────────────────────────
 sqlalchemy==2.0.31
 asyncpg==0.30.0
 alembic==1.13.2
-psycopg2-binary==2.9.12
 
-# ── Database – Neo4j ──────────────────────────────────────────────────────────
-neo4j==5.22.0
-
-# ── Database – Redis / FakeRedis ──────────────────────────────────────────────
+# ── Redis / FakeRedis ─────────────────────────────────────────────────────────
 redis==5.0.7
-fakeredis==2.23.3         # in-memory Redis for local dev and tests
+fakeredis==2.23.3
 
 # ── Configuration & Validation ────────────────────────────────────────────────
 pydantic[email]==2.13.3
@@ -68,20 +63,11 @@ structlog==24.2.0
 # ── Resilience ────────────────────────────────────────────────────────────────
 tenacity==8.5.0
 
-# ── Web Search Tool (actual installed version) ────────────────────────────────
+# ── Web Search (actual installed version) ────────────────────────────────────
 duckduckgo-search==8.1.1
 
 # ── Document Processing ───────────────────────────────────────────────────────
 beautifulsoup4==4.12.3
-pymupdf==1.28.0
 
-# ── Testing ───────────────────────────────────────────────────────────────────
-pytest==8.2.2
-pytest-asyncio==0.23.7
-pytest-mock==3.14.0
-pytest-cov==5.0.0
-httpx==0.27.0             # async test client for FastAPI
-
-# ── Linting / Formatting (dev only) ───────────────────────────────────────────
-ruff==0.5.1
-mypy==1.10.1
+# NOTE: pymupdf (PDF support) is heavy and not needed for the core demo.
+# Add back if you need PDF ingestion: pymupdf==1.28.0
