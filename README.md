@@ -1,8 +1,9 @@
 # AgentForge 🤖
 ## Portfolio project — local multi-agent RAG research assistant, LangGraph orchestration, zero-cost LLM via OpenRouter free tier
 
-[![Live Demo](https://img.shields.io/badge/demo-backend%20/docs-blue)](http://localhost:8000/docs)
-[![Live Demo](https://img.shields.io/badge/demo-frontend%20localhost:3000-blue)](http://localhost:3000)
+- **Live Demo (Backend OpenAPI docs):** http://localhost:8000/docs
+- **Live Demo (Frontend):** http://localhost:3000
+
 [![CI/CD](https://github.com/prajwalgowda994598-design/AgentForge/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/prajwalgowda994598-design/AgentForge/actions)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-blue.svg)](https://python.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
@@ -133,14 +134,14 @@ If you want a single command to prepare the environment and run the backend + fr
 - Windows (PowerShell):
 
 ```powershell
-# from inside the agentforge folder
+# from project root
 .\scripts\run_local_dev.ps1
 ```
 
 - macOS / Linux (Bash):
 
 ```bash
-# from inside the agentforge folder
+# from project root
 ./scripts/run_local_dev.sh
 ```
 
@@ -150,8 +151,6 @@ What the scripts do:
 - Start the FastAPI backend on port 8000 and the Vite frontend on port 3000 (or 5173 if configured).
 - Logs are written to `logs/backend.log` and `logs/frontend.log` so you can inspect startup output.
 
-If you prefer manual steps, see the "Local Development (without Docker)" section above.
-
 ---
 
 ## Local Development (without Docker)
@@ -159,32 +158,27 @@ If you prefer manual steps, see the "Local Development (without Docker)" section
 ### Backend — no Docker, no API key needed for tests
 
 ```bash
-cd agentforge
-
-# Create virtual environment
+# from project root
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 # source .venv/bin/activate     # macOS/Linux
 
-# Install dependencies
-pip install -r backend/requirements.txt
-
-# Copy and configure environment
+pip install -r requirements.txt
 cp .env.example .env
-# Set LOCAL_DEV=true (default) — uses SQLite + FakeRedis, no Docker needed
-# Set OPENROUTER_API_KEY for live queries
+# Set OPENROUTER_API_KEY if you want live LLM queries.
 
-# Run
-set PYTHONPATH=..  # Windows — one level up from agentforge/
-python -m uvicorn agentforge.backend.main:app --reload --port 8000
+python run.py --reload --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend
+
 ```bash
 cd frontend
 npm install
-npm run dev        # http://localhost:5173
+npm run dev
 ```
+
+Open the backend docs at `http://localhost:8000/docs` and the frontend at `http://localhost:3000`.
 
 ---
 
