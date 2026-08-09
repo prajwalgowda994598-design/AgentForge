@@ -105,8 +105,9 @@ services:
 
 
   # ── Frontend – React SPA ────────────────────────────────────────────────────
-  - type: static
+  - type: web
     name: agentforge-frontend
+    env: static
     plan: free
 
     rootDir: agentforge/frontend
