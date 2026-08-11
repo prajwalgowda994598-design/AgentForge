@@ -86,11 +86,14 @@ def _build_embeddings():
                 "Run: pip install langchain-huggingface sentence-transformers"
             )
 
-    # Default: OpenAI embeddings
+    # Default: OpenAI-compatible embeddings
+    # Falls back to OPENROUTER_API_KEY when OPENAI_API_KEY is not separately set,
+    # since both point to the same OpenRouter endpoint on Render.
     from langchain_openai import OpenAIEmbeddings
-    if not settings.OPENAI_API_KEY:
+    api_key = settings.OPENAI_API_KEY or settings.OPENROUTER_API_KEY
+    if not api_key:
         raise VectorStoreError(
-            "EMBEDDING_PROVIDER=openai requires OPENAI_API_KEY to be set.\n"
+            "EMBEDDING_PROVIDER=openai requires OPENAI_API_KEY (or OPENROUTER_API_KEY) to be set.\n"
             "Either:\n"
             "  1. Add OPENAI_API_KEY=sk-... to your .env file\n"
             "  2. Or set EMBEDDING_PROVIDER=local for a free local model"
@@ -98,7 +101,8 @@ def _build_embeddings():
     logger.info("embeddings_provider_openai", model=settings.OPENAI_EMBEDDING_MODEL)
     return OpenAIEmbeddings(
         model=settings.OPENAI_EMBEDDING_MODEL,
-        openai_api_key=settings.OPENAI_API_KEY,
+        openai_api_key=api_key,
+        openai_api_base=settings.OPENAI_BASE_URL,
     )
 
 
