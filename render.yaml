@@ -58,9 +58,11 @@ services:
       - key: OPENROUTER_BASE_URL
         value: https://openrouter.ai/api/v1
       - key: OPENROUTER_MODEL
-        value: nvidia/nemotron-3-super-120b-a12b:free
+        value: meta-llama/llama-3.3-70b-instruct:free
+      - key: OPENROUTER_FALLBACK_MODELS
+        value: mistralai/mistral-7b-instruct:free,nvidia/nemotron-3-super-120b-a12b:free,qwen/qwen-2.5-72b-instruct:free
       - key: OPENROUTER_SITE_URL
-        value: https://agentforge-frontend.onrender.com
+        value: https://agentforge-frontend-776a.onrender.com
       - key: OPENROUTER_SITE_NAME
         value: AgentForge
       - key: EMBEDDING_PROVIDER
@@ -69,14 +71,15 @@ services:
         value: text-embedding-3-small
       - key: OPENAI_API_KEY
         sync: false
-      - key: OPENAI_BASE_URL
-        value: https://openrouter.ai/api/v1
+      # OPENAI_BASE_URL intentionally omitted — defaults to https://api.openai.com/v1
+      # OpenRouter does NOT support /embeddings; if no real OPENAI_API_KEY is set,
+      # the FAISS store gracefully degrades to empty (web-only search mode).
       - key: FAISS_DIMENSION
         value: "1536"
       - key: FAISS_INDEX_PATH
         value: /tmp/faiss_index
       - key: AGENT_TIMEOUT_SECONDS
-        value: "180"
+        value: "300"
       - key: OPENAI_MAX_TOKENS
         value: "1024"
       - key: CRITIC_PASS_THRESHOLD

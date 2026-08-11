@@ -1,12 +1,13 @@
 // AgentForge – Research Page  ·  Industrial Foundry Edition
 
-import { useState, useCallback } from 'react'
-import { submitResearch } from '@/utils/api'
+import { useState, useCallback, useEffect, useRef } from 'react'
+import { submitResearch, getSession } from '@/utils/api'
 import { useResearchWebSocket } from '@/hooks/useResearchWebSocket'
 import QueryForm from '@/components/QueryForm'
 import AgentPipeline from '@/components/AgentPipeline'
 import ResearchResultPanel from '@/components/ResearchResultPanel'
 import IngestPanel from '@/components/IngestPanel'
+import type { ResearchResult } from '@/types'
 
 type PageState = 'idle' | 'running' | 'done' | 'error'
 
@@ -14,11 +15,65 @@ export default function ResearchPage() {
   const [pageState, setPageState] = useState<PageState>('idle')
   const [sessionId, setSessionId] = useState<string | null>(null)
   const [submitError, setSubmitError] = useState<string | null>(null)
+  // HTTP-poll fallback: used when WebSocket doesn't deliver results
+  const [pollResult, setPollResult] = useState<ResearchResult | null>(null)
+  const [pollError, setPollError] = useState<string | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const { agents, result, error: wsError, isConnected, connect } = useResearchWebSocket()
+  const { agents, result: wsResult, error: wsError, isConnected, connect } = useResearchWebSocket()
+
+  // ── HTTP polling fallback ────────────────────────────────────────────────────
+  // Starts polling the REST endpoint every 5 s when a session is running.
+  // Stops as soon as the session is completed, failed, or the WS delivers first.
+  useEffect(() => {
+    if (!sessionId || pageState !== 'running') {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null }
+      return
+    }
+    // If WebSocket already delivered a result, no need to poll
+    if (wsResult) return
+
+    pollRef.current = setInterval(async () => {
+      try {
+        const session = await getSession(sessionId)
+        if (session.status === 'completed' && session.final_answer) {
+          clearInterval(pollRef.current!)
+          pollRef.current = null
+          setPollResult({
+            session_id: sessionId,
+            final_answer: session.final_answer!,
+            critic_score: session.critic_score ?? 0,
+            iterations: session.iterations ?? 1,
+            sources: [],
+            execution_time_ms: 0,
+            status: 'completed',
+          })
+        } else if (session.status === 'failed') {
+          clearInterval(pollRef.current!)
+          pollRef.current = null
+          const errMsg = session.metadata_?.error
+          setPollError(errMsg ?? 'Pipeline failed — check backend logs for details')
+        }
+      } catch {
+        // ignore transient poll errors
+      }
+    }, 5_000)
+
+    return () => { if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null } }
+  }, [sessionId, pageState, wsResult])
+
+  // Stop polling once WS delivers
+  useEffect(() => {
+    if (wsResult && pollRef.current) {
+      clearInterval(pollRef.current)
+      pollRef.current = null
+    }
+  }, [wsResult])
 
   const handleSubmit = useCallback(async (query: string, topK: number) => {
     setSubmitError(null)
+    setPollResult(null)
+    setPollError(null)
     setPageState('running')
     try {
       const res = await submitResearch({ query, top_k: topK })
@@ -30,9 +85,11 @@ export default function ResearchPage() {
     }
   }, [connect])
 
-  const currentResult = result
+  // Prefer WS result; fall back to HTTP poll result
+  const currentResult = wsResult ?? pollResult
+  const currentError = wsError ?? pollError
   const effectiveState: PageState =
-    wsError ? 'error' : currentResult ? 'done' : pageState
+    currentError ? 'error' : currentResult ? 'done' : pageState
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
@@ -56,7 +113,7 @@ export default function ResearchPage() {
       )}
 
       {/* Error banner */}
-      {(submitError || wsError) && (
+      {(submitError || currentError) && (
         <div
           className="mb-5 flex items-start gap-3 rounded border border-forge-alert/40
                      bg-forge-panel px-4 py-3 font-sans text-sm text-forge-alert"
@@ -65,7 +122,7 @@ export default function ResearchPage() {
             <path d="M7 1L13 12.5H1L7 1z" stroke="currentColor" strokeWidth="1.2" fill="none" strokeLinejoin="round" />
             <path d="M7 5v3.5M7 10v.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
           </svg>
-          {submitError ?? wsError}
+          {submitError ?? currentError}
         </div>
       )}
 
@@ -130,8 +187,8 @@ export default function ResearchPage() {
                   Pipeline Active
                 </p>
                 <p className="mt-1 font-mono text-[10px] uppercase tracking-widest text-forge-steel">
-                  30 – 90 seconds
-                </p>
+                   60 – 180 seconds
+                 </p>
               </div>
             </div>
           )}
@@ -158,7 +215,7 @@ export default function ResearchPage() {
               <p className="font-display text-sm font-bold uppercase tracking-widest text-forge-alert">
                 Pipeline Failed
               </p>
-              <p className="mt-2 font-sans text-sm text-forge-muted">{submitError ?? wsError}</p>
+              <p className="mt-2 font-sans text-sm text-forge-muted">{submitError ?? currentError}</p>
               <button
                 onClick={() => setPageState('idle')}
                 className="forge-btn-ghost mt-5"

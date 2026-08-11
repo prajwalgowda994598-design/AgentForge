@@ -87,6 +87,7 @@ class ResearchSessionSchema(TimestampMixin):
     final_answer: Optional[str]
     critic_score: Optional[float]
     iterations: int
+    metadata_: Optional[Dict[str, Any]] = Field(None, alias="metadata_")
 
 
 # ── Agent Run ──────────────────────────────────────────────────────────────────

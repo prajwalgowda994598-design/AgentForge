@@ -146,7 +146,7 @@ class Settings(BaseSettings):
     # ── Agent Orchestration ────────────────────────────────────────────────────
     CRITIC_PASS_THRESHOLD: float = 0.7
     MAX_RESEARCH_ITERATIONS: int = 3
-    AGENT_TIMEOUT_SECONDS: int = 240  # 4 fallback models × 55s each + headroom
+    AGENT_TIMEOUT_SECONDS: int = 300  # 4 fallback models × 55s each + retry headroom
 
     # ── Logging ────────────────────────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"

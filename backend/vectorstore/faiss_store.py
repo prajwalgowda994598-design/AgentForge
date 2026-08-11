@@ -59,12 +59,21 @@ def _metadata_file() -> Path:
     return Path(settings.FAISS_INDEX_PATH) / "metadata.pkl"
 
 
+# Sentinel: set to True when embeddings are confirmed unavailable so we skip
+# all embedding calls without repeated retries.
+_EMBEDDINGS_UNAVAILABLE: bool = False
+
+
 def _build_embeddings():
     """
     Return the embedding model based on EMBEDDING_PROVIDER.
 
     openai → OpenAIEmbeddings (needs OPENAI_API_KEY, 1536-dim)
     local  → HuggingFaceEmbeddings via sentence-transformers (384-dim, free)
+
+    Returns None if embeddings cannot be configured (e.g. no API key, wrong
+    base URL, missing package).  Callers must check for None and skip FAISS
+    operations gracefully — the pipeline falls back to web-only search.
     """
     provider = settings.EMBEDDING_PROVIDER.lower()
 
@@ -81,24 +90,28 @@ def _build_embeddings():
                 encode_kwargs={"normalize_embeddings": True},
             )
         except ImportError:
-            raise VectorStoreError(
-                "EMBEDDING_PROVIDER=local requires langchain-huggingface. "
-                "Run: pip install langchain-huggingface sentence-transformers"
+            logger.warning(
+                "embeddings_local_unavailable",
+                reason="langchain-huggingface not installed",
+                fallback="pipeline will use web search only",
             )
+            return None
 
     # Default: OpenAI-compatible embeddings
-    # Falls back to OPENROUTER_API_KEY when OPENAI_API_KEY is not separately set,
-    # since both point to the same OpenRouter endpoint on Render.
+    # Falls back to OPENROUTER_API_KEY when OPENAI_API_KEY is not separately set.
+    # NOTE: OpenRouter does NOT support /embeddings — if OPENAI_BASE_URL points
+    # at openrouter.ai this will fail; return None so FAISS is skipped gracefully.
     from langchain_openai import OpenAIEmbeddings
     api_key = settings.OPENAI_API_KEY or settings.OPENROUTER_API_KEY
     if not api_key:
-        raise VectorStoreError(
-            "EMBEDDING_PROVIDER=openai requires OPENAI_API_KEY (or OPENROUTER_API_KEY) to be set.\n"
-            "Either:\n"
-            "  1. Add OPENAI_API_KEY=sk-... to your .env file\n"
-            "  2. Or set EMBEDDING_PROVIDER=local for a free local model"
+        logger.warning(
+            "embeddings_openai_unavailable",
+            reason="no API key configured",
+            fallback="pipeline will use web search only",
         )
-    logger.info("embeddings_provider_openai", model=settings.OPENAI_EMBEDDING_MODEL)
+        return None
+    logger.info("embeddings_provider_openai", model=settings.OPENAI_EMBEDDING_MODEL,
+                base_url=settings.OPENAI_BASE_URL)
     return OpenAIEmbeddings(
         model=settings.OPENAI_EMBEDDING_MODEL,
         openai_api_key=api_key,
@@ -140,11 +153,32 @@ class FAISSVectorStore:
         Initialise the embedding model and load / create the FAISS index.
         Called once at startup by get_vector_store().
         Model loading is run in a thread so it never blocks the event loop.
+        If embeddings are unavailable, the index is left empty and all
+        similarity_search calls return [] — the pipeline falls back to web search.
         """
+        global _EMBEDDINGS_UNAVAILABLE
         # Build embeddings lazily — run in thread so startup doesn't block the loop
         if self._embeddings is None:
             loop = asyncio.get_event_loop()
-            self._embeddings = await loop.run_in_executor(_THREAD_POOL, _build_embeddings)
+            try:
+                self._embeddings = await asyncio.wait_for(
+                    loop.run_in_executor(_THREAD_POOL, _build_embeddings),
+                    timeout=20.0,  # don't let a hanging embedding API stall startup
+                )
+            except (asyncio.TimeoutError, Exception) as exc:
+                logger.warning(
+                    "embeddings_init_failed",
+                    error=str(exc)[:200],
+                    fallback="FAISS disabled — pipeline will use web search only",
+                )
+                self._embeddings = None
+
+        if self._embeddings is None:
+            _EMBEDDINGS_UNAVAILABLE = True
+            self._index = self._build_empty_index()
+            self._metadata = []
+            logger.info("faiss_index_skipped", reason="embeddings_unavailable")
+            return
 
         idx_file  = _index_file()
         meta_file = _metadata_file()
@@ -229,22 +263,31 @@ class FAISSVectorStore:
         """
         Embed the query and return the top-k most similar document chunks
         with their metadata and L2 distance scores.
+        Returns [] when embeddings are unavailable so the pipeline degrades
+        gracefully to web-only search.
         """
+        if _EMBEDDINGS_UNAVAILABLE or self._embeddings is None:
+            logger.debug("faiss_search_skipped", reason="embeddings_unavailable")
+            return []
         if self._index is None:
             raise VectorStoreError("Index not initialised")
         if self._index.ntotal == 0:
-            logger.warning("faiss_search_empty_index")
+            logger.debug("faiss_search_empty_index")
             return []
 
         try:
             # Run embedding in thread pool — CPU-bound, must not block the event loop
             loop = asyncio.get_event_loop()
-            query_vector = await loop.run_in_executor(
-                _THREAD_POOL,
-                lambda: self._embeddings.embed_query(query),
+            query_vector = await asyncio.wait_for(
+                loop.run_in_executor(
+                    _THREAD_POOL,
+                    lambda: self._embeddings.embed_query(query),
+                ),
+                timeout=15.0,  # don't let a hanging embedding API block the pipeline
             )
-        except Exception as exc:
-            raise VectorStoreError(f"Query embedding failed: {exc}") from exc
+        except (asyncio.TimeoutError, Exception) as exc:
+            logger.warning("faiss_query_embedding_failed", error=str(exc)[:200])
+            return []
 
         query_np = np.array([query_vector], dtype=np.float32)
         actual_k = min(k, self._index.ntotal)

@@ -26,6 +26,7 @@ export interface ResearchSession {
   final_answer: string | null
   critic_score: number | null
   iterations: number
+  metadata_?: { error?: string; [key: string]: unknown } | null
   created_at: string
   updated_at: string
 }
