@@ -65,8 +65,6 @@ function ScoreGauge({ score }: { score: number }) {
         </text>
         {/* Tick marks at 0 / 50 / 100 */}
         {[0, 0.5, 1].map((t) => {
-          const { x: x1, y: y1 } = polarToXY(START + ARC * t)
-          const { x: x2, y: y2 } = polarToXY(START + ARC * t)
           const offset = 4
           const rad = ((START + ARC * t - 90) * Math.PI) / 180
           return (
@@ -85,8 +83,6 @@ function ScoreGauge({ score }: { score: number }) {
 }
 
 export default function ResearchResultPanel({ result }: ResearchResultPanelProps) {
-  const scorePercent = Math.round(result.critic_score * 100)
-
   return (
     <div className="space-y-4" style={{ animation: 'fade-up 0.3s ease-out' }}>
 
