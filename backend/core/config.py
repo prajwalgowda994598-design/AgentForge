@@ -65,10 +65,11 @@ class Settings(BaseSettings):
     # Primary model — override via OPENROUTER_MODEL env var on Render
     OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
     # Comma-separated fallback chain tried in order when primary times out / errors
+    # Note: google/gemma-3-27b-it:free was removed from OpenRouter free tier Aug 2025
     OPENROUTER_FALLBACK_MODELS: str = (
-        "google/gemma-3-27b-it:free,"
         "mistralai/mistral-7b-instruct:free,"
-        "nvidia/nemotron-3-super-120b-a12b:free"
+        "nvidia/nemotron-3-super-120b-a12b:free,"
+        "qwen/qwen-2.5-72b-instruct:free"
     )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
     OPENROUTER_SITE_NAME: str = "AgentForge"
