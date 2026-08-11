@@ -9,8 +9,23 @@ name    = "agentforge"
 version = "1.0.0"
 requires-python = ">=3.10"
 
+[tool.setuptools.package-dir]
+"agentforge"                     = "."
+"agentforge.backend"             = "backend"
+"agentforge.backend.agents"      = "backend/agents"
+"agentforge.backend.api"         = "backend/api"
+"agentforge.backend.api.routes"  = "backend/api/routes"
+"agentforge.backend.core"        = "backend/core"
+"agentforge.backend.database"    = "backend/database"
+"agentforge.backend.graph"       = "backend/graph"
+"agentforge.backend.models"      = "backend/models"
+"agentforge.backend.services"    = "backend/services"
+"agentforge.backend.vectorstore" = "backend/vectorstore"
+
 [tool.setuptools.packages.find]
-where = ["."]
+where   = ["."]
+include = ["agentforge*"]
+exclude = ["backend*", "docker*", "docs*", "frontend*", "sample_data*", "scripts*"]
 
 [tool.pytest.ini_options]
 testpaths    = ["backend/tests"]
