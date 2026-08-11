@@ -63,13 +63,12 @@ class Settings(BaseSettings):
     # Free models on OpenRouter — pick any from https://openrouter.ai/models?q=free
     # Full list: run python agentforge/list_free_models.py
     # Primary model — override via OPENROUTER_MODEL env var on Render
-    OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
+    OPENROUTER_MODEL: str = "deepseek/deepseek-r1-0528:free"
     # Comma-separated fallback chain tried in order when primary times out / errors
-    # Note: google/gemma-3-27b-it:free was removed from OpenRouter free tier Aug 2025
     OPENROUTER_FALLBACK_MODELS: str = (
-        "mistralai/mistral-7b-instruct:free,"
-        "nvidia/nemotron-3-super-120b-a12b:free,"
-        "qwen/qwen-2.5-72b-instruct:free"
+        "deepseek/deepseek-chat-v3-0324:free,"
+        "google/gemma-3-27b-it:free,"
+        "mistralai/mistral-small-3.2-24b-instruct:free"
     )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
     OPENROUTER_SITE_NAME: str = "AgentForge"
