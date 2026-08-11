@@ -3,6 +3,9 @@
 # Python 3.11 (pinned via .python-version)
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ── Install this repo as a package so agentforge.backend.* is importable ──────
+-e ..
+
 # ── Web Framework ──────────────────────────────────────────────────────────────
 fastapi==0.111.0
 uvicorn[standard]==0.30.1
