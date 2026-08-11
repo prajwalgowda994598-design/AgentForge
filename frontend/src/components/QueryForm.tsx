@@ -47,16 +47,33 @@ export default function QueryForm({ onSubmit, isLoading }: QueryFormProps) {
         className="forge-input"
       />
 
-      {/* Example chips */}
-      <div className="mt-2.5 flex flex-wrap gap-1.5">
-        {EXAMPLE_QUERIES.map((q) => (
+      {/* Example spec cards */}
+      <div className="mt-3 space-y-1.5">
+        <p className="font-mono text-[9px] uppercase tracking-widest text-forge-steel/60">
+          Example specs
+        </p>
+        {EXAMPLE_QUERIES.map((q, i) => (
           <button
             key={q}
             type="button"
             onClick={() => setQuery(q)}
-            className="forge-chip"
+            className="group flex w-full items-start gap-2.5 rounded border border-forge-border
+                       bg-forge-panel2 px-3 py-2 text-left transition-all duration-150
+                       hover:border-forge-ember/60 hover:bg-forge-ember/5"
           >
-            {q.length > 46 ? q.slice(0, 46) + '…' : q}
+            {/* Stamped index plate */}
+            <span
+              className="mt-px flex h-4 w-4 shrink-0 items-center justify-center rounded-sm
+                         border border-forge-border bg-forge-bg font-mono text-[9px]
+                         font-bold text-forge-steel transition-colors
+                         group-hover:border-forge-ember/60 group-hover:text-forge-ember"
+            >
+              {i + 1}
+            </span>
+            <span className="font-mono text-[11px] leading-snug text-forge-steel
+                             transition-colors group-hover:text-forge-paper">
+              {q}
+            </span>
           </button>
         ))}
       </div>
