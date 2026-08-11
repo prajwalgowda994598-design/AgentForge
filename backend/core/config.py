@@ -61,10 +61,15 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str = Field(default="", description="OpenRouter API key (sk-or-v1-...)")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     # Free models on OpenRouter — pick any from https://openrouter.ai/models?q=free
-    # Note: google/gemini-2.0-flash-exp:free was removed from OpenRouter in mid-2025.
-    # Current reliable free model: nvidia/nemotron-3-super-120b-a12b:free (262K ctx)
     # Full list: run python agentforge/list_free_models.py
-    OPENROUTER_MODEL: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    # Primary model — override via OPENROUTER_MODEL env var on Render
+    OPENROUTER_MODEL: str = "meta-llama/llama-3.3-70b-instruct:free"
+    # Comma-separated fallback chain tried in order when primary times out / errors
+    OPENROUTER_FALLBACK_MODELS: str = (
+        "google/gemma-3-27b-it:free,"
+        "mistralai/mistral-7b-instruct:free,"
+        "nvidia/nemotron-3-super-120b-a12b:free"
+    )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
     OPENROUTER_SITE_NAME: str = "AgentForge"
 
@@ -140,7 +145,7 @@ class Settings(BaseSettings):
     # ── Agent Orchestration ────────────────────────────────────────────────────
     CRITIC_PASS_THRESHOLD: float = 0.7
     MAX_RESEARCH_ITERATIONS: int = 3
-    AGENT_TIMEOUT_SECONDS: int = 120
+    AGENT_TIMEOUT_SECONDS: int = 240  # 4 fallback models × 55s each + headroom
 
     # ── Logging ────────────────────────────────────────────────────────────────
     LOG_LEVEL: str = "INFO"

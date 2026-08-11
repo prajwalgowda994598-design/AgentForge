@@ -105,23 +105,15 @@ def build_llm(
     """
     Build a ChatOpenAI instance routed to either OpenRouter or OpenAI,
     depending on the LLM_PROVIDER setting.
-
-    We pass a pre-created httpx.AsyncClient so the OpenAI SDK never needs to
-    call asyncio.to_thread() / run_in_executor(None, ...) for platform detection.
-    This prevents the "cannot schedule new futures after interpreter shutdown"
-    crash that occurs when the pipeline runs inside a secondary asyncio.run() loop.
     """
     effective_model       = model       or settings.LLM_MODEL
     effective_temperature = temperature if temperature is not None else settings.OPENAI_TEMPERATURE
     effective_max_tokens  = max_tokens  or settings.OPENAI_MAX_TOKENS
 
-    # Validate before passing to ChatOpenAI so the error is human-readable
     validated_key = _validate_api_key(settings.LLM_API_KEY, settings.LLM_PROVIDER)
 
-    # Pre-create an httpx.AsyncClient so the SDK uses it directly instead of
-    # spawning internal threads for platform detection on the first request.
     async_http_client = httpx.AsyncClient(
-        timeout=httpx.Timeout(connect=10.0, read=120.0, write=30.0, pool=5.0),
+        timeout=httpx.Timeout(connect=10.0, read=60.0, write=30.0, pool=5.0),
         follow_redirects=True,
     )
 
@@ -134,8 +126,6 @@ def build_llm(
         http_async_client  = async_http_client,
     )
 
-    # OpenRouter requires these headers to identify your app in their dashboard
-    # and for per-model rate limiting on the free tier.
     if settings.LLM_PROVIDER == "openrouter":
         common_kwargs["default_headers"] = {
             "HTTP-Referer": settings.OPENROUTER_SITE_URL,
@@ -143,6 +133,12 @@ def build_llm(
         }
 
     return ChatOpenAI(**common_kwargs)
+
+
+def _fallback_models() -> list[str]:
+    """Return the ordered fallback model list for OpenRouter."""
+    raw = settings.OPENROUTER_FALLBACK_MODELS
+    return [m.strip() for m in raw.split(",") if m.strip()]
 
 
 class BaseAgent(ABC):
@@ -174,37 +170,49 @@ class BaseAgent(ABC):
 
     async def _call_llm(self, messages: list) -> str:
         """
-        Invoke the LLM and return the plain-text response string.
-
-        Wraps the call so that transient network failures
-        (httpx.ConnectError, APIConnectionError, timeouts, etc.) are caught,
-        logged with a clear message, and re-raised as AgentExecutionError so
-        the caller's retry loop and the background task's error handler both
-        see a consistent exception type.
+        Invoke the LLM with automatic model fallback.
+        Tries the primary model first; on timeout or network error works through
+        OPENROUTER_FALLBACK_MODELS before giving up.
         """
-        try:
-            response = await self._llm.ainvoke(messages)
-        except _RETRYABLE_EXCEPTIONS as exc:
-            # These are transient — let the run() retry loop handle them.
-            self.logger.warning(
-                "llm_network_error",
-                agent=self.agent_name,
-                error_type=type(exc).__name__,
-                error=str(exc),
-            )
-            raise  # re-raise so tenacity can retry
-        except Exception as exc:
-            # Non-retryable (auth error, bad request, etc.) — wrap immediately.
-            self.logger.error(
-                "llm_call_failed",
-                agent=self.agent_name,
-                error_type=type(exc).__name__,
-                error=str(exc),
-            )
+        use_fallbacks = settings.LLM_PROVIDER == "openrouter"
+        candidates = ([settings.LLM_MODEL] + _fallback_models()) if use_fallbacks else [settings.LLM_MODEL]
+
+        last_exc: Exception = RuntimeError("no models tried")
+        for model_name in candidates:
+            llm = self._llm if model_name == settings.LLM_MODEL else build_llm(model=model_name)
+            try:
+                response = await asyncio.wait_for(
+                    llm.ainvoke(messages),
+                    timeout=55.0,   # fail fast per model so fallback kicks in quickly
+                )
+                if model_name != settings.LLM_MODEL:
+                    self.logger.info("llm_fallback_used", agent=self.agent_name, model=model_name)
+                break
+            except (asyncio.TimeoutError, *_RETRYABLE_EXCEPTIONS) as exc:
+                self.logger.warning(
+                    "llm_model_slow_trying_next",
+                    agent=self.agent_name,
+                    model=model_name,
+                    error=str(exc)[:120],
+                )
+                last_exc = exc
+                continue
+            except Exception as exc:
+                self.logger.error(
+                    "llm_call_failed",
+                    agent=self.agent_name,
+                    error_type=type(exc).__name__,
+                    error=str(exc),
+                )
+                raise AgentExecutionError(
+                    self.agent_name,
+                    f"LLM call failed ({type(exc).__name__}): {exc}",
+                ) from exc
+        else:
             raise AgentExecutionError(
                 self.agent_name,
-                f"LLM call failed ({type(exc).__name__}): {exc}",
-            ) from exc
+                f"All models timed out or failed. Last error: {last_exc}",
+            )
 
         raw = str(response.content) if hasattr(response, "content") else str(response)
         # Normalise Unicode punctuation that some LLMs emit (non-breaking hyphens,
