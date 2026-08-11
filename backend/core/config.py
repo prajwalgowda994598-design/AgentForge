@@ -60,15 +60,14 @@ class Settings(BaseSettings):
     # Sign up at https://openrouter.ai  →  Keys  →  Create Key
     OPENROUTER_API_KEY: str = Field(default="", description="OpenRouter API key (sk-or-v1-...)")
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
-    # Free models on OpenRouter — pick any from https://openrouter.ai/models?q=free
-    # Full list: run python agentforge/list_free_models.py
-    # Verified free as of Aug 2026 — see https://openrouter.ai/models?q=:free
+    # Free models on OpenRouter — verified working Aug 2026
+    # Run python find_working_models.py to refresh this list
     # Primary model — override via OPENROUTER_MODEL env var on Render
-    OPENROUTER_MODEL: str = "nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
+    OPENROUTER_MODEL: str = "google/gemma-4-26b-a4b-it:free"
     # Comma-separated fallback chain tried in order when primary times out / errors
     OPENROUTER_FALLBACK_MODELS: str = (
         "nvidia/nemotron-3-super-120b-a12b:free,"
-        "google/gemma-4-26b-a4b:free,"
+        "nvidia/nemotron-3-ultra-550b-a55b:free,"
         "openai/gpt-oss-20b:free"
     )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
