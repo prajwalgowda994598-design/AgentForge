@@ -26,9 +26,9 @@ services:
     region: oregon
     plan: starter
 
-    buildCommand: pip install -r backend/requirements-render.txt
+    buildCommand: pip install -e . && pip install -r backend/requirements-render.txt
 
-    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
+    startCommand: uvicorn agentforge.backend.main:app --host 0.0.0.0 --port $PORT --workers 1 --log-level info
 
     healthCheckPath: /health
 
