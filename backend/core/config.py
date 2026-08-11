@@ -62,13 +62,14 @@ class Settings(BaseSettings):
     OPENROUTER_BASE_URL: str = "https://openrouter.ai/api/v1"
     # Free models on OpenRouter — pick any from https://openrouter.ai/models?q=free
     # Full list: run python agentforge/list_free_models.py
+    # Verified free as of Aug 2026 — see https://openrouter.ai/models?q=:free
     # Primary model — override via OPENROUTER_MODEL env var on Render
-    OPENROUTER_MODEL: str = "deepseek/deepseek-r1-0528:free"
+    OPENROUTER_MODEL: str = "nvidia/llama-3.1-nemotron-ultra-253b-v1:free"
     # Comma-separated fallback chain tried in order when primary times out / errors
     OPENROUTER_FALLBACK_MODELS: str = (
-        "deepseek/deepseek-chat-v3-0324:free,"
-        "google/gemma-3-27b-it:free,"
-        "mistralai/mistral-small-3.2-24b-instruct:free"
+        "nvidia/nemotron-3-super-120b-a12b:free,"
+        "google/gemma-4-26b-a4b:free,"
+        "openai/gpt-oss-20b:free"
     )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
     OPENROUTER_SITE_NAME: str = "AgentForge"
