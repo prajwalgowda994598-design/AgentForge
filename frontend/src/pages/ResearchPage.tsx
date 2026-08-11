@@ -6,6 +6,7 @@ import { useResearchWebSocket } from '@/hooks/useResearchWebSocket'
 import QueryForm from '@/components/QueryForm'
 import AgentPipeline from '@/components/AgentPipeline'
 import ResearchResultPanel from '@/components/ResearchResultPanel'
+import IngestPanel from '@/components/IngestPanel'
 
 type PageState = 'idle' | 'running' | 'done' | 'error'
 
@@ -73,6 +74,7 @@ export default function ResearchPage() {
         <div className="space-y-4 lg:col-span-1">
           <QueryForm onSubmit={handleSubmit} isLoading={effectiveState === 'running'} />
           <AgentPipeline agents={agents} />
+          <IngestPanel />
         </div>
 
         {/* Main content */}

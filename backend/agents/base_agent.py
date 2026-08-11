@@ -206,9 +206,23 @@ class BaseAgent(ABC):
                 f"LLM call failed ({type(exc).__name__}): {exc}",
             ) from exc
 
-        if hasattr(response, "content"):
-            return str(response.content)
-        return str(response)
+        raw = str(response.content) if hasattr(response, "content") else str(response)
+        # Normalise Unicode punctuation that some LLMs emit (non-breaking hyphens,
+        # curly quotes, en/em dashes) to their plain ASCII equivalents so they
+        # render cleanly in the frontend Markdown view.
+        _UNICODE_MAP = str.maketrans({
+            "\u2011": "-",   # non-breaking hyphen
+            "\u2012": "-",   # figure dash
+            "\u2013": "-",   # en dash
+            "\u2014": "-",   # em dash
+            "\u2018": "'",   # left single quote
+            "\u2019": "'",   # right single quote
+            "\u201c": '"',   # left double quote
+            "\u201d": '"',   # right double quote
+            "\u00a0": " ",   # non-breaking space
+            "\u2026": "...", # ellipsis
+        })
+        return raw.translate(_UNICODE_MAP)
 
     @abstractmethod
     async def _execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
