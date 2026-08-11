@@ -17,8 +17,9 @@
 
 | Service | URL |
 |---|---|
-| **Backend API (Swagger)** | [agentforge-backend.onrender.com/docs](https://agentforge-backend.onrender.com/docs) |
 | **Frontend** | [agentforge-frontend.onrender.com](https://agentforge-frontend.onrender.com) |
+| **Backend API (Swagger)** | [agentforge-backend-0jm1.onrender.com/docs](https://agentforge-backend-0jm1.onrender.com/docs) |
+| **Health check** | [agentforge-backend-0jm1.onrender.com/health](https://agentforge-backend-0jm1.onrender.com/health) |
 
 ---
 
@@ -48,7 +49,7 @@ FastAPI Backend (Uvicorn)
        │
        ├── LangGraph Workflow ──► Researcher → Summarizer → Critic → Fact Checker → Synthesizer
        │
-       ├── FAISS Vector Store  (local embeddings — sentence-transformers all-MiniLM-L6-v2)
+       ├── FAISS Vector Store  (OpenAI-compatible embeddings via OpenRouter)
        ├── SQLite / PostgreSQL  (sessions, agent runs, audit log)
        ├── FakeRedis / Redis    (cache, session state)
        └── OpenRouter API       (LLM — free tier, no credit card)
@@ -63,7 +64,7 @@ FastAPI Backend (Uvicorn)
 | Backend API | Python 3.11+, FastAPI, Uvicorn |
 | Agent Orchestration | LangGraph, LangChain |
 | LLM | OpenRouter free tier (`nvidia/nemotron-3-super-120b-a12b:free`) or OpenAI |
-| Embeddings | `sentence-transformers/all-MiniLM-L6-v2` (local, free) or OpenAI |
+| Embeddings | OpenAI `text-embedding-3-small` via OpenRouter (or local sentence-transformers) |
 | Vector Store | FAISS (IndexIDMap + IndexFlatL2) |
 | Relational DB | SQLite (local dev) / PostgreSQL (production) |
 | Cache | FakeRedis (local dev) / Redis (production) |
@@ -265,7 +266,7 @@ Or manually:
    - `agentforge-backend` → `SECRET_KEY` — any 64-char random string
 4. Click **Manual Deploy → Deploy latest commit**
 
-The backend cold-starts in ~60 s on the first request (sentence-transformers model download). Subsequent requests are fast. Both services run on Render's **free tier** — no credit card needed.
+The backend cold-starts in ~30–60 s on the first request after idle. Both services run on Render's **free tier** — no credit card needed.
 
 ---
 
@@ -274,8 +275,8 @@ The backend cold-starts in ~60 s on the first request (sentence-transformers mod
 **Why LangGraph?**
 StateGraph with conditional edges gives explicit control over the retry loop (Critic → Researcher). A plain chain can't route dynamically based on a quality score.
 
-**Why local embeddings?**
-`sentence-transformers/all-MiniLM-L6-v2` is free, runs on CPU, and produces 384-dim vectors with strong semantic quality for RAG tasks. No OpenAI key required for search.
+**Why OpenRouter for embeddings?**
+OpenRouter provides an OpenAI-compatible API for both LLM calls and embeddings with the same key, keeping deployment to a single secret. Locally, `sentence-transformers/all-MiniLM-L6-v2` can be used for zero-cost dev (`EMBEDDING_PROVIDER=local`).
 
 **Why asyncio.create_task() instead of ThreadPoolExecutor?**
 The OpenAI SDK v2 calls `asyncio.to_thread()` on first request. Running the pipeline in a thread with its own `asyncio.run()` loop caused `RuntimeError: cannot schedule new futures after interpreter shutdown`. Using `create_task()` keeps everything on the Uvicorn event loop — all I/O-bound LLM calls yield naturally without blocking.
