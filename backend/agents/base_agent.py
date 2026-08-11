@@ -188,7 +188,10 @@ class BaseAgent(ABC):
                 if model_name != settings.LLM_MODEL:
                     self.logger.info("llm_fallback_used", agent=self.agent_name, model=model_name)
                 break
-            except (asyncio.TimeoutError, *_RETRYABLE_EXCEPTIONS) as exc:
+            except (asyncio.TimeoutError, TimeoutError,
+                    ConnectionError, httpx.ConnectError,
+                    httpx.TimeoutException, httpx.RemoteProtocolError,
+                    APIConnectionError, APITimeoutError) as exc:
                 self.logger.warning(
                     "llm_model_slow_trying_next",
                     agent=self.agent_name,
