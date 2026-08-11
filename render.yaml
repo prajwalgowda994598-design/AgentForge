@@ -107,6 +107,6 @@ services:
 
     envVars:
       - key: VITE_API_URL
-        value: https://agentforge-backend.onrender.com
+        value: https://agentforge-backend-0jm1.onrender.com
       - key: VITE_WS_URL
-        value: wss://agentforge-backend.onrender.com
+        value: wss://agentforge-backend-0jm1.onrender.com
