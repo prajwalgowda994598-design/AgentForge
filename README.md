@@ -13,13 +13,13 @@
 
 ## Live Demo
 
-> ⚠️ Free-tier Render — first request after idle takes **30–60 s** to wake up.
-
 | Service | URL |
 |---|---|
-| **Frontend** | [agentforge-frontend.onrender.com](https://agentforge-frontend.onrender.com) |
-| **Backend API (Swagger)** | [agentforge-backend-0jm1.onrender.com/docs](https://agentforge-backend-0jm1.onrender.com/docs) |
-| **Health check** | [agentforge-backend-0jm1.onrender.com/health](https://agentforge-backend-0jm1.onrender.com/health) |
+| 🌐 **Frontend** | **[agentforge-frontend-776a.onrender.com](https://agentforge-frontend-776a.onrender.com)** |
+| 📡 **Backend API (Swagger)** | [agentforge-backend-0jm1.onrender.com/docs](https://agentforge-backend-0jm1.onrender.com/docs) |
+| ❤️ **Health check** | [agentforge-backend-0jm1.onrender.com/health](https://agentforge-backend-0jm1.onrender.com/health) |
+
+> 💡 Free-tier Render — backend kept warm via cron-job.org. First query takes ~60–180 s (5 agents running).
 
 ---
 
