@@ -183,7 +183,7 @@ class BaseAgent(ABC):
             try:
                 response = await asyncio.wait_for(
                     llm.ainvoke(messages),
-                    timeout=55.0,   # fail fast per model so fallback kicks in quickly
+                    timeout=30.0,   # fail fast per model — 4 models × 30s = 2 min max wait
                 )
                 if model_name != settings.LLM_MODEL:
                     self.logger.info("llm_fallback_used", agent=self.agent_name, model=model_name)
