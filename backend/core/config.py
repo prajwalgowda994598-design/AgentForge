@@ -63,13 +63,13 @@ class Settings(BaseSettings):
     # Free models on OpenRouter — verified working Aug 2026
     # Run python find_working_models.py to refresh this list
     # Primary model — override via OPENROUTER_MODEL env var on Render
-    OPENROUTER_MODEL: str = "nvidia/nemotron-3-super-120b-a12b:free"
+    OPENROUTER_MODEL: str = "google/gemma-4-26b-a4b-it:free"
     # Comma-separated fallback chain tried in order when primary times out / errors
     # Different providers so one pool being down doesn't kill all fallbacks
     OPENROUTER_FALLBACK_MODELS: str = (
-        "nvidia/nemotron-3-ultra-550b-a55b:free,"
-        "google/gemma-4-26b-a4b-it:free,"
-        "openai/gpt-oss-20b:free"
+        "nvidia/nemotron-3-super-120b-a12b:free,"
+        "openai/gpt-oss-20b:free,"
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
     )
     OPENROUTER_SITE_URL: str = "http://localhost:3000"   # shown in OpenRouter dashboard
     OPENROUTER_SITE_NAME: str = "AgentForge"
