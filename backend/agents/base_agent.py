@@ -36,7 +36,7 @@ from typing import Any, Dict, Optional
 
 import httpx
 from langchain_openai import ChatOpenAI
-from openai import APIConnectionError, APITimeoutError
+from openai import APIConnectionError, APITimeoutError, RateLimitError
 from tenacity import (
     AsyncRetrying,
     retry_if_exception_type,
@@ -191,7 +191,9 @@ class BaseAgent(ABC):
             except (asyncio.TimeoutError, TimeoutError,
                     ConnectionError, httpx.ConnectError,
                     httpx.TimeoutException, httpx.RemoteProtocolError,
-                    APIConnectionError, APITimeoutError) as exc:
+                    APIConnectionError, APITimeoutError,
+                    RateLimitError) as exc:
+                # RateLimitError (429) — try next fallback model
                 self.logger.warning(
                     "llm_model_slow_trying_next",
                     agent=self.agent_name,
